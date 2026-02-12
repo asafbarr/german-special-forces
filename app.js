@@ -12,54 +12,35 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ====== Course Skeleton + Week 1-4 Exercises ======
+// ====== Course Skeleton (Week 1-4 example) ======
 const course = [
-  // WEEK 1
-  {
-    week:1, level:"A1", lesson:"Basics: Greetings, Present Tense, Simple Sentences",
-    media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
-    exercises:[
-      {id:1,type:"multiple",question:"Translate: Hello",options:["Hallo","Tschüss","Ja"],answer:0},
-      {id:2,type:"multiple",question:"Translate: Bye",options:["Danke","Tschüss","Bitte"],answer:1},
-      {id:3,type:"multiple",question:"Translate: Yes",options:["Ja","Nein","Bitte"],answer:0},
-      {id:4,type:"multiple",question:"Translate: No",options:["Nein","Ja","Hallo"],answer:0},
-      {id:5,type:"multiple",question:"Translate: Please",options:["Danke","Bitte","Tschüss"],answer:1},
-      {id:6,type:"open",question:"Write: My name is Asaf.",answer:"Ich heiße Asaf."},
-      {id:7,type:"open",question:"Write: How are you?",answer:"Wie geht's?"}
-    ]
-  },
-  // WEEK 2
-  {
-    week:2, level:"A1", lesson:"Numbers, Family, Days of Week",
-    media:"https://www.sample-videos.com/audio/mp3/wave.mp3",
-    exercises:[
-      {id:1,type:"multiple",question:"Translate: One",options:["Eins","Zwei","Drei"],answer:0},
-      {id:2,type:"multiple",question:"Translate: Two",options:["Zwei","Eins","Drei"],answer:0},
-      {id:3,type:"multiple",question:"Translate: Monday",options:["Montag","Dienstag","Mittwoch"],answer:0},
-      {id:4,type:"open",question:"Write: My brother",answer:"Mein Bruder"},
-      {id:5,type:"open",question:"Write: My sister",answer:"Meine Schwester"}
-    ]
-  },
-  // WEEK 3
-  {
-    week:3, level:"A2", lesson:"Past tense, common verbs",
-    media:"https://www.sample-videos.com/audio/mp3/india-national-anthem.mp3",
-    exercises:[
-      {id:1,type:"multiple",question:"Translate: I went",options:["Ich ging","Ich gehe","Ich gehe"],answer:0},
-      {id:2,type:"open",question:"Write: He ate",answer:"Er aß"},
-      {id:3,type:"open",question:"Write: We drank",answer:"Wir tranken"}
-    ]
-  },
-  // WEEK 4
-  {
-    week:4, level:"A2", lesson:"Future tense, daily activities",
-    media:"https://www.sample-videos.com/audio/mp3/rock.mp3",
-    exercises:[
-      {id:1,type:"multiple",question:"Translate: I will go",options:["Ich werde gehen","Ich gehe","Ich ging"],answer:0},
-      {id:2,type:"open",question:"Write: She will eat",answer:"Sie wird essen"},
-      {id:3,type:"open",question:"Write: They will drink",answer:"Sie werden trinken"}
-    ]
-  }
+  {week:1,level:"A1",lesson:"Basics: Greetings, Present Tense, Simple Sentences",
+   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+   exercises:[
+     {id:1,type:"multiple",question:"Translate: Hello",options:["Hallo","Tschüss","Ja"],answer:0},
+     {id:2,type:"multiple",question:"Translate: Bye",options:["Danke","Tschüss","Bitte"],answer:1},
+     {id:3,type:"multiple",question:"Translate: Yes",options:["Ja","Nein","Bitte"],answer:0},
+     {id:4,type:"open",question:"Write: My name is Asaf.",answer:"Ich heiße Asaf."}
+   ]},
+  {week:2,level:"A1",lesson:"Numbers, Family, Days of Week",
+   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+   exercises:[
+     {id:1,type:"multiple",question:"Translate: One",options:["Eins","Zwei","Drei"],answer:0},
+     {id:2,type:"multiple",question:"Translate: Two",options:["Zwei","Eins","Drei"],answer:0},
+     {id:3,type:"open",question:"Write: My brother",answer:"Mein Bruder"}
+   ]},
+  {week:3,level:"A2",lesson:"Past tense, common verbs",
+   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+   exercises:[
+     {id:1,type:"multiple",question:"Translate: I went",options:["Ich ging","Ich gehe","Ich gehe"],answer:0},
+     {id:2,type:"open",question:"Write: He ate",answer:"Er aß"}
+   ]},
+  {week:4,level:"A2",lesson:"Future tense, daily activities",
+   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+   exercises:[
+     {id:1,type:"multiple",question:"Translate: I will go",options:["Ich werde gehen","Ich gehe","Ich ging"],answer:0},
+     {id:2,type:"open",question:"Write: She will eat",answer:"Sie wird essen"}
+   ]}
 ];
 
 // ====== Global Variables ======
@@ -97,6 +78,7 @@ function loadUserData(){
       });
     }
     updateUI();
+    renderWeeksList();
     loadExercise();
     loadMedia();
   });
@@ -107,6 +89,35 @@ function updateUI(){
   xpDisplay.textContent="XP: "+xp;
   streakDisplay.textContent="Streak: "+streak;
   weekDisplay.textContent="Week: "+currentWeek;
+  updateProgressBar();
+}
+
+// ====== Render Weeks Sidebar ======
+function renderWeeksList(){
+  const list=document.getElementById("weeksList");
+  list.innerHTML="";
+  course.forEach(week=>{
+    const li=document.createElement("li");
+    li.textContent=`Week ${week.week}: ${week.lesson}`;
+    li.style.cursor="pointer";
+
+    if(week.week > currentWeek) {
+      li.style.opacity=0.4;
+      li.onclick=()=>alert("Finish previous weeks first!");
+    } else {
+      li.onclick=()=>{
+        currentWeek=week.week;
+        currentExerciseIndex=0;
+        updateUI();
+        loadExercise();
+        loadMedia();
+      };
+    }
+
+    if(week.week < currentWeek) li.textContent+=" ✅";
+
+    list.appendChild(li);
+  });
 }
 
 // ====== Load Exercise ======
@@ -158,6 +169,7 @@ function checkAnswer(ans){
         currentWeek++;
         currentExerciseIndex=0;
         loadMedia();
+        renderWeeksList();
       }
       updateUI();
       loadExercise();
@@ -178,5 +190,22 @@ function saveUserData(correct){
 // ====== Load Media ======
 function loadMedia(){
   const weekData=course.find(w=>w.week===currentWeek);
-  if(weekData) audioPlayer.src=weekData.media;
+  if(weekData){
+    audioPlayer.src=weekData.media;
+    audioPlayer.load();
+  }
+}
+
+// ====== Progress Bar ======
+function updateProgressBar(){
+  const weekData=course.find(w=>w.week===currentWeek);
+  const progress = (currentExerciseIndex/weekData.exercises.length)*100;
+  document.getElementById("progressFill").style.width = progress + "%";
+}
+
+// ====== Submit Button for Open-ended ======
+submitBtn.onclick = () => {
+  const weekData=course.find(w=>w.week===currentWeek);
+  const ex=weekData.exercises[currentExerciseIndex];
+  if(ex.type==="open") checkAnswer(null);
 }
