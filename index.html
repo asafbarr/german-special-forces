@@ -1,214 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>German Special Forces Academy</title>
-  <style>
-    body { font-family: Arial; background: #111; color: white; padding: 30px; }
-    h1 { color: #4CAF50; }
-    button { padding: 8px 15px; margin: 5px; background: #4CAF50; border: none; color: white; cursor: pointer; }
-    .section { margin-top: 20px; padding: 20px; background: #222; border-radius: 8px; }
-    textarea { width: 100%; margin-top: 10px; padding: 8px; background: #333; color: white; border: none; }
-    .hidden { display: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>German Special Forces</title>
+<style>
+  body { font-family: sans-serif; background-color: #121212; color: #eee; padding: 20px; }
+  #exercise { margin-bottom: 20px; }
+  button { padding: 10px 20px; margin: 5px; cursor:pointer; }
+  #feedback { margin-top: 10px; height: 24px; }
+  #media { margin-top: 20px; }
+  input { padding: 5px; width: 300px; }
+</style>
 </head>
 <body>
 
-<h1>🇩🇪 German Special Forces Academy</h1>
+<h1>German Special Forces</h1>
+<div id="xpDisplay">XP: 0</div>
+<div id="streakDisplay">Streak: 0</div>
+<div id="weekDisplay">Week: 1</div>
 
-<div id="login" class="section">
-  <h2>Select User</h2>
-  <button id="loginAsaf">Asaf</button>
-  <button id="loginB1">Brother 1</button>
-  <button id="loginB2">Brother 2</button>
+<div id="exercise">
+  <div id="question"></div>
+  <div id="options"></div>
+  <input type="text" id="answerInput" style="display:none;" placeholder="Type your answer here">
+  <button id="submitBtn">Submit</button>
 </div>
 
-<div id="dashboard" class="hidden">
+<div id="feedback"></div>
 
-  <div class="section">
-    <h2 id="welcome"></h2>
-    <button id="logoutBtn">Switch User</button>
-  </div>
-
-  <div class="section">
-    <h2>Current Phase</h2>
-    <p id="phase">Phase 1 – A1 Foundation</p>
-  </div>
-
-  <div class="section">
-    <h2>XP & Progress</h2>
-    <p>XP: <span id="xp">0</span></p>
-    <p>Homework Streak: <span id="streak">0</span></p>
-    <button id="xp10Btn">+10 XP (Complete Exercise)</button>
-    <button id="xp25Btn">+25 XP (Finish Lesson)</button>
-  </div>
-
-  <div class="section">
-    <h2>Week 1 Lesson: Basics</h2>
-    <p><b>Sentence Structure:</b> Subject – Verb – Object</p>
-    <p><b>Example:</b> Ich lerne Deutsch. (I learn German)</p>
-    <p><b>Present Tense:</b> sein (ich bin, du bist…) / haben (ich habe, du hast…)</p>
-    <p><b>Vocabulary:</b> Hallo, Tschüss, Ja, Nein, Bitte, Danke</p>
-    <p><b>Phrases:</b> Wie heißt du? Ich heiße … Wie geht’s? Mir geht’s gut.</p>
-  </div>
-
-  <div class="section">
-    <h2>Week 1 Exercise</h2>
-    <p>Translate: "I am a student."</p>
-    <button class="exerciseBtn" data-answer="Ich bin ein Student.">Ich bin ein Student.</button>
-    <button class="exerciseBtn" data-answer="Ich habe ein Student.">Ich habe ein Student.</button>
-    <button class="exerciseBtn" data-answer="Ich sind ein Student.">Ich sind ein Student.</button>
-    <p id="exerciseResult"></p>
-  </div>
-
-  <div class="section">
-    <h2>Homework</h2>
-    <p>Write 3 sentences introducing yourself in German (use vocab + phrases from lesson).</p>
-    <textarea id="homework" rows="6"></textarea>
-    <button id="saveHomeworkBtn">Submit Homework (+20 XP)</button>
-  </div>
-
-  <div class="section">
-    <h2>Leaderboard</h2>
-    <div id="leaderboard"></div>
-  </div>
-
+<div id="media">
+  <audio id="audioPlayer" controls src=""></audio>
 </div>
 
-<!-- Firebase SDKs -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
-  authDomain: "german-special-forces.firebaseapp.com",
-  projectId: "german-special-forces",
-  storageBucket: "german-special-forces.firebasestorage.app",
-  messagingSenderId: "440759850329",
-  appId: "1:440759850329:web:33a1f0116e1c32f2132848"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let currentUser = null;
-let users = ["Asaf","Brother1","Brother2"];
-
-// LOGIN / LOGOUT
-window.login = async function(name){
-  currentUser = name;
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("welcome").innerText = "Welcome, " + name;
-
-  const userRef = doc(db, "users", currentUser);
-  const userSnap = await getDoc(userRef);
-  if(!userSnap.exists()){
-    await setDoc(userRef, {xp:0, streak:0, homework:""});
-  }
-
-  loadUser();
-  updateLeaderboard();
-}
-
-window.logout = function(){
-  currentUser = null;
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("login").classList.remove("hidden");
-}
-
-// LOAD USER DATA
-async function loadUser(){
-  const userRef = doc(db, "users", currentUser);
-  const userSnap = await getDoc(userRef);
-  if(userSnap.exists()){
-    const data = userSnap.data();
-    document.getElementById("xp").innerText = data.xp || 0;
-    document.getElementById("streak").innerText = data.streak || 0;
-    document.getElementById("homework").value = data.homework || "";
-  }
-}
-
-// SAVE HOMEWORK
-window.saveHomework = async function(){
-  if(!currentUser) return;
-  const homeworkText = document.getElementById("homework").value;
-  const userRef = doc(db, "users", currentUser);
-
-  const userSnap = await getDoc(userRef);
-  let data = userSnap.data();
-  const newStreak = (data.streak || 0)+1;
-  const newXP = (data.xp || 0)+20;
-
-  await setDoc(userRef, {
-    xp: newXP,
-    streak: newStreak,
-    homework: homeworkText
-  });
-
-  document.getElementById("xp").innerText = newXP;
-  document.getElementById("streak").innerText = newStreak;
-  updateLeaderboard();
-
-  alert("Homework submitted! Send your homework to the AI for correction.");
-}
-
-// ADD XP MANUALLY
-window.addXP = async function(amount){
-  if(!currentUser) return;
-  const userRef = doc(db, "users", currentUser);
-  const userSnap = await getDoc(userRef);
-  let data = userSnap.data();
-  const newXP = (data.xp || 0)+amount;
-  await updateDoc(userRef,{xp:newXP});
-  document.getElementById("xp").innerText = newXP;
-  updateLeaderboard();
-}
-
-// LEADERBOARD
-async function updateLeaderboard(){
-  let ranking = [];
-  for(let u of users){
-    const userRef = doc(db, "users", u);
-    const userSnap = await getDoc(userRef);
-    let xp = 0;
-    if(userSnap.exists()) xp = userSnap.data().xp || 0;
-    ranking.push({name:u, xp: xp});
-  }
-
-  ranking.sort((a,b)=>b.xp-a.xp);
-  let html = "";
-  ranking.forEach((u,i)=>{ html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>` });
-  document.getElementById("leaderboard").innerHTML = html;
-}
-
-// EXERCISE CHECKING
-window.checkAnswer = async function(userAnswer){
-  const correct = "Ich bin ein Student.";
-  const resultEl = document.getElementById("exerciseResult");
-  if(userAnswer === correct){
-    resultEl.innerText = "✅ Correct! +10 XP";
-    addXP(10);
-  } else {
-    resultEl.innerText = "❌ Wrong, try again!";
-  }
-}
-
-// EVENT LISTENERS
-document.getElementById("loginAsaf").addEventListener("click",()=>login("Asaf"));
-document.getElementById("loginB1").addEventListener("click",()=>login("Brother1"));
-document.getElementById("loginB2").addEventListener("click",()=>login("Brother2"));
-document.getElementById("logoutBtn").addEventListener("click",()=>logout());
-document.getElementById("saveHomeworkBtn").addEventListener("click",()=>saveHomework());
-document.getElementById("xp10Btn").addEventListener("click",()=>addXP(10));
-document.getElementById("xp25Btn").addEventListener("click",()=>addXP(25));
-
-// EXERCISE BUTTONS
-document.querySelectorAll(".exerciseBtn").forEach(btn=>{
-  btn.addEventListener("click",()=>checkAnswer(btn.dataset.answer));
-});
-</script>
-
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
