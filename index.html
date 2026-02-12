@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>German Special Forces</title>
+  <title>German Special Forces Academy</title>
   <style>
     body {
       font-family: Arial;
@@ -84,73 +84,127 @@
 
 </div>
 
-<script>
-let currentUser = null;
-let users = ["Asaf","Brother1","Brother2"];
+<!-- Firebase SDKs -->
+<script type="module">
+  // Import Firebase functions
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-function login(name) {
-  currentUser = name;
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("welcome").innerText = "Welcome, " + name;
-  loadUser();
-  updateLeaderboard();
-}
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
+    authDomain: "german-special-forces.firebaseapp.com",
+    projectId: "german-special-forces",
+    storageBucket: "german-special-forces.firebasestorage.app",
+    messagingSenderId: "440759850329",
+    appId: "1:440759850329:web:33a1f0116e1c32f2132848"
+  };
 
-function logout() {
-  currentUser = null;
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("login").classList.remove("hidden");
-}
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-function loadUser() {
-  document.getElementById("xp").innerText =
-    localStorage.getItem("xp_" + currentUser) || 0;
+  let currentUser = null;
+  let users = ["Asaf","Brother1","Brother2"];
 
-  document.getElementById("streak").innerText =
-    localStorage.getItem("streak_" + currentUser) || 0;
+  // LOGIN
+  window.login = async function(name){
+    currentUser = name;
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("welcome").innerText = "Welcome, " + name;
 
-  document.getElementById("homework").value =
-    localStorage.getItem("homework_" + currentUser) || "";
-}
+    // Initialize user in Firestore if not exists
+    const userRef = doc(db, "users", currentUser);
+    const userSnap = await getDoc(userRef);
+    if(!userSnap.exists()){
+      await setDoc(userRef, {xp:0, streak:0, homework:""});
+    }
 
-function addXP(amount) {
-  let xp = parseInt(localStorage.getItem("xp_" + currentUser)) || 0;
-  xp += amount;
-  localStorage.setItem("xp_" + currentUser, xp);
-  document.getElementById("xp").innerText = xp;
-  updateLeaderboard();
-}
+    loadUser();
+    updateLeaderboard();
+  }
 
-function saveHomework() {
-  localStorage.setItem("homework_" + currentUser,
-    document.getElementById("homework").value);
+  // LOGOUT
+  window.logout = function(){
+    currentUser = null;
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("login").classList.remove("hidden");
+  }
 
-  let streak = parseInt(localStorage.getItem("streak_" + currentUser)) || 0;
-  streak += 1;
-  localStorage.setItem("streak_" + currentUser, streak);
-  document.getElementById("streak").innerText = streak;
+  // LOAD USER DATA
+  async function loadUser(){
+    const userRef = doc(db, "users", currentUser);
+    const userSnap = await getDoc(userRef);
+    if(userSnap.exists()){
+      const data = userSnap.data();
+      document.getElementById("xp").innerText = data.xp || 0;
+      document.getElementById("streak").innerText = data.streak || 0;
+      document.getElementById("homework").value = data.homework || "";
+    }
+  }
 
-  addXP(20);
-}
+  // SAVE HOMEWORK
+  window.saveHomework = async function(){
+    const homeworkText = document.getElementById("homework").value;
+    const userRef = doc(db, "users", currentUser);
 
-function updateLeaderboard() {
-  let ranking = users.map(user => {
-    return {
-      name: user,
-      xp: parseInt(localStorage.getItem("xp_" + user)) || 0
-    };
-  });
+    // Get current data
+    const userSnap = await getDoc(userRef);
+    let data = userSnap.data();
 
-  ranking.sort((a,b)=>b.xp-a.xp);
+    // Update streak & XP
+    const newStreak = (data.streak || 0) + 1;
+    const newXP = (data.xp || 0) + 20;
 
-  let html = "";
-  ranking.forEach((u,i)=>{
-    html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>`;
-  });
+    await setDoc(userRef, {
+      xp: newXP,
+      streak: newStreak,
+      homework: homeworkText
+    });
 
-  document.getElementById("leaderboard").innerHTML = html;
-}
+    document.getElementById("xp").innerText = newXP;
+    document.getElementById("streak").innerText = newStreak;
+
+    updateLeaderboard();
+  }
+
+  // ADD XP MANUALLY
+  window.addXP = async function(amount){
+    const userRef = doc(db, "users", currentUser);
+    const userSnap = await getDoc(userRef);
+    let data = userSnap.data();
+    const newXP = (data.xp || 0) + amount;
+
+    await updateDoc(userRef, {xp: newXP});
+    document.getElementById("xp").innerText = newXP;
+
+    updateLeaderboard();
+  }
+
+  // UPDATE LEADERBOARD
+  async function updateLeaderboard(){
+    let ranking = [];
+    for(let u of users){
+      const userRef = doc(db, "users", u);
+      const userSnap = await getDoc(userRef);
+      let xp = 0;
+      if(userSnap.exists()){
+        xp = userSnap.data().xp || 0;
+      }
+      ranking.push({name:u, xp: xp});
+    }
+
+    ranking.sort((a,b)=>b.xp - a.xp);
+
+    let html = "";
+    ranking.forEach((u,i)=>{
+      html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>`;
+    });
+
+    document.getElementById("leaderboard").innerHTML = html;
+  }
+
 </script>
 
 </body>
