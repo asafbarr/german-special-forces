@@ -91,7 +91,7 @@ const audioClips = [
 ];
 
 let username = "";
-let userData = {xp:0, streak:0, week:1, exerciseIndex:0};
+let userData = {xp:0, streak:0, week:1, exerciseIndex:0, shuffledExercises:null};
 let currentExercises = [];
 
 // --- LOGIN ---
@@ -137,8 +137,15 @@ function startApp(){
 
 // --- LOAD WEEK ---
 function loadWeek(week){
-  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5);
-  userData.exerciseIndex = 0; // always start at beginning of week
+  // Only shuffle if first time starting this week
+  if(!userData.shuffledExercises || userData.week !== week) {
+    userData.shuffledExercises = [...week1Exercises].sort(()=>Math.random()-0.5);
+    userData.exerciseIndex = 0;
+    userData.week = week;
+    saveProgress();
+  }
+
+  currentExercises = userData.shuffledExercises;
   showExercise();
   updateProgress();
 }
@@ -193,6 +200,7 @@ function checkAnswer(ans){
 
   if(userData.exerciseIndex >= currentExercises.length){
     userData.week += 1;
+    userData.shuffledExercises = null; // reset for next week
     alert(`🎉 You finished Week ${userData.week-1}! Week ${userData.week} unlocked!`);
     loadWeek(userData.week);
   } else {
