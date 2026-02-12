@@ -17,7 +17,7 @@ const course = [
   // WEEK 1
   {
     week:1, level:"A1", lesson:"Basics: Greetings, Present Tense, Simple Sentences",
-    media:"https://www.sample-videos.com/audio/mp3/crowd-cheering.mp3",
+    media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
     exercises:[
       {id:1,type:"multiple",question:"Translate: Hello",options:["Hallo","Tschüss","Ja"],answer:0},
       {id:2,type:"multiple",question:"Translate: Bye",options:["Danke","Tschüss","Bitte"],answer:1},
