@@ -1,4 +1,4 @@
-// Firebase config
+// Initialize Firebase (compat)
 const firebaseConfig = {
   apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
   authDomain: "german-special-forces.firebaseapp.com",
@@ -8,7 +8,6 @@ const firebaseConfig = {
   appId: "1:440759850329:web:33a1f0116e1c32f2132848"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -30,10 +29,16 @@ const feedback = document.getElementById("feedback");
 const progressFill = document.getElementById("progressFill");
 const audioPlayer = document.getElementById("audioPlayer");
 
-// Week 1 Exercises (50 mixed, same as before)
-const week1Exercises = [ /* same 50 exercises as before */ ];
+// Week 1 Exercises (50 exercises, mixed input + multiple-choice)
+const week1Exercises = [
+  {type:"mcq", question:"Hello in German is...", options:["Hallo","Tschüss","Bitte"], answer:"Hallo"},
+  {type:"mcq", question:"Thank you in German is...", options:["Danke","Bitte","Entschuldigung"], answer:"Danke"},
+  {type:"input", question:"Say 'Good morning' in German", answer:"Guten Morgen"},
+  {type:"input", question:"Translate 'I am a student' into German", answer:"Ich bin ein Student"},
+  // ... add all 50 exercises here
+];
 
-// Bonus audio playlist
+// Bonus audio clips (random playback)
 const audioClips = [
   "https://www.freesound.org/data/previews/341/341695_3248244-lq.mp3",
   "https://www.freesound.org/data/previews/256/256113_4486188-lq.mp3",
@@ -44,54 +49,63 @@ let username = "";
 let userData = {xp:0, streak:0, week:1, exerciseIndex:0};
 let currentExercises = [];
 
-// LOGIN HANDLER
+// --- LOGIN HANDLER ---
 loginBtn.onclick = async ()=>{
-  if(!usernameInput.value.trim()) return alert("Enter a username!");
-  username = usernameInput.value.trim().toLowerCase(); // case-insensitive
+  const rawUsername = usernameInput.value.trim();
+  if(!rawUsername) return alert("Enter a username!");
+  
+  username = rawUsername.toLowerCase(); // case-insensitive
   const userRef = db.collection("users").doc(username);
   const doc = await userRef.get();
+  
   if(doc.exists){
     userData = doc.data();
   } else {
-    await userRef.set(userData); // create new user
+    await userRef.set(userData);
   }
+  
   loginScreen.style.display="none";
   appScreen.style.display="flex";
   startApp();
 }
 
-// START APP
+// --- START APP ---
 function startApp(){
-  weekDisplay.innerText = `Week: ${userData.week}`;
-  xpDisplay.innerText = `XP: ${userData.xp}`;
-  streakDisplay.innerText = `Streak: ${userData.streak}`;
-  
+  updateStats();
+
   // Sidebar
-  weeksList.innerHTML = "";
+  weeksList.innerHTML="";
   for(let i=1;i<=10;i++){
     const li = document.createElement("li");
     li.innerText = `Week ${i}`;
     if(i>userData.week) li.classList.add("locked");
-    li.addEventListener("click",()=>{if(i<=userData.week) loadWeek(i)});
+    li.addEventListener("click", ()=>{ if(i<=userData.week) loadWeek(i) });
     weeksList.appendChild(li);
   }
 
   loadWeek(userData.week);
+
+  // Play random bonus audio
   audioPlayer.src = audioClips[Math.floor(Math.random()*audioClips.length)];
   audioPlayer.play().catch(()=>{});
 }
 
+// --- LOAD WEEK ---
 function loadWeek(week){
-  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5);
+  // For now all weeks use Week 1 exercises
+  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5); 
   userData.exerciseIndex = 0;
   showExercise();
+  updateProgress();
 }
 
+// --- SHOW EXERCISE ---
 function showExercise(){
-  feedback.innerText = "";
+  feedback.innerText="";
   const ex = currentExercises[userData.exerciseIndex];
   questionEl.innerText = ex.question;
-  optionsEl.innerHTML = "";
+  optionsEl.innerHTML="";
+  
   if(ex.type==="mcq"){
     answerInput.style.display="none";
     ex.options.forEach(opt=>{
@@ -107,6 +121,7 @@ function showExercise(){
   }
 }
 
+// --- SUBMIT BUTTON ---
 submitBtn.onclick = ()=>{
   const ex = currentExercises[userData.exerciseIndex];
   if(ex.type==="input"){
@@ -114,32 +129,44 @@ submitBtn.onclick = ()=>{
   }
 }
 
+// --- CHECK ANSWER ---
 function checkAnswer(ans){
   const ex = currentExercises[userData.exerciseIndex];
   if(ans.toLowerCase()===ex.answer.toLowerCase()){
-    feedback.innerText = `✔ Correct +10 XP`;
+    feedback.innerText = "✔ Correct +10 XP";
     userData.xp += 10;
     userData.streak += 1;
   } else {
-    feedback.innerText = `❌ Wrong, try again!`;
+    feedback.innerText = "❌ Wrong, try again!";
     userData.streak = 0;
     return;
   }
 
   userData.exerciseIndex += 1;
-  if(userData.exerciseIndex>=currentExercises.length){
+  updateProgress();
+  updateStats();
+  saveProgress();
+
+  if(userData.exerciseIndex >= currentExercises.length){
     userData.week += 1;
     alert(`🎉 You finished Week ${userData.week-1}! Week ${userData.week} unlocked!`);
     loadWeek(userData.week);
   } else {
     setTimeout(showExercise,300);
   }
+}
 
+// --- UPDATE PROGRESS BAR & STATS ---
+function updateProgress(){
+  progressFill.style.width = ((userData.exerciseIndex+1)/currentExercises.length)*100 + "%";
+}
+function updateStats(){
   xpDisplay.innerText = `XP: ${userData.xp}`;
   streakDisplay.innerText = `Streak: ${userData.streak}`;
   weekDisplay.innerText = `Week: ${userData.week}`;
+}
 
-  // Save progress
+// --- SAVE PROGRESS ---
+function saveProgress(){
   db.collection("users").doc(username).set(userData);
-  progressFill.style.width = ((userData.exerciseIndex+1)/currentExercises.length)*100+"%";
 }
