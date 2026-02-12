@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>German Special Forces</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      padding: 30px;
+    }
+    h1 { color: #4CAF50; }
+    button {
+      padding: 10px 20px;
+      margin: 10px 0;
+      background: #4CAF50;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .section {
+      margin-top: 20px;
+      padding: 20px;
+      background: #222;
+      border-radius: 8px;
+    }
+    input, textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      background: #333;
+      color: white;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🇩🇪 German Special Forces Training</h1>
+
+<div class="section">
+  <h2>Current Level</h2>
+  <p id="level">A1 - Phase 1</p>
+</div>
+
+<div class="section">
+  <h2>This Week's Lesson</h2>
+  <div id="lesson">
+    <p>Lesson content will go here.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Homework Submission</h2>
+  <textarea id="homework" rows="6" placeholder="Write your homework here..."></textarea>
+  <button onclick="saveHomework()">Save Homework</button>
+</div>
+
+<div class="section">
+  <h2>Progress Notes</h2>
+  <div id="notes"></div>
+</div>
+
+<script>
+function saveHomework() {
+  const text = document.getElementById("homework").value;
+  localStorage.setItem("homework", text);
+  document.getElementById("notes").innerText = "Homework saved locally.";
+}
+
+window.onload = function() {
+  const saved = localStorage.getItem("homework");
+  if (saved) {
+    document.getElementById("homework").value = saved;
+  }
+};
+</script>
+
+</body>
+</html>
