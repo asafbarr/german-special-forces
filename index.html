@@ -11,8 +11,8 @@
     }
     h1 { color: #4CAF50; }
     button {
-      padding: 10px 20px;
-      margin: 10px 5px 10px 0;
+      padding: 8px 15px;
+      margin: 5px 5px 5px 0;
       background: #4CAF50;
       border: none;
       color: white;
@@ -37,7 +37,7 @@
 </head>
 <body>
 
-<h1>🇩🇪 German Special Forces</h1>
+<h1>🇩🇪 German Special Forces Academy</h1>
 
 <div id="login" class="section">
   <h2>Select User</h2>
@@ -59,34 +59,42 @@
   </div>
 
   <div class="section">
+    <h2>XP & Progress</h2>
+    <p>XP: <span id="xp">0</span></p>
+    <p>Homework Streak: <span id="streak">0</span></p>
+    <button onclick="addXP(10)">+10 XP (Complete Exercise)</button>
+    <button onclick="addXP(25)">+25 XP (Finish Lesson)</button>
+  </div>
+
+  <div class="section">
     <h2>This Week's Lesson</h2>
-    <div id="lesson">
-      <p>Week 1: Present tense + Basic sentence structure.</p>
-    </div>
+    <p>Week 1: Present tense + sentence structure.</p>
   </div>
 
   <div class="section">
     <h2>Homework</h2>
-    <textarea id="homework" rows="6" placeholder="Write your homework here..."></textarea>
-    <button onclick="saveHomework()">Save</button>
+    <textarea id="homework" rows="6"></textarea>
+    <button onclick="saveHomework()">Submit Homework (+20 XP)</button>
   </div>
 
   <div class="section">
-    <h2>Status</h2>
-    <p id="status"></p>
+    <h2>Leaderboard</h2>
+    <div id="leaderboard"></div>
   </div>
 
 </div>
 
 <script>
 let currentUser = null;
+let users = ["Asaf","Brother1","Brother2"];
 
 function login(name) {
   currentUser = name;
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("welcome").innerText = "Welcome, " + name;
-  loadHomework();
+  loadUser();
+  updateLeaderboard();
 }
 
 function logout() {
@@ -95,19 +103,53 @@ function logout() {
   document.getElementById("login").classList.remove("hidden");
 }
 
-function saveHomework() {
-  const text = document.getElementById("homework").value;
-  localStorage.setItem("homework_" + currentUser, text);
-  document.getElementById("status").innerText = "Homework saved.";
+function loadUser() {
+  document.getElementById("xp").innerText =
+    localStorage.getItem("xp_" + currentUser) || 0;
+
+  document.getElementById("streak").innerText =
+    localStorage.getItem("streak_" + currentUser) || 0;
+
+  document.getElementById("homework").value =
+    localStorage.getItem("homework_" + currentUser) || "";
 }
 
-function loadHomework() {
-  const saved = localStorage.getItem("homework_" + currentUser);
-  if (saved) {
-    document.getElementById("homework").value = saved;
-  } else {
-    document.getElementById("homework").value = "";
-  }
+function addXP(amount) {
+  let xp = parseInt(localStorage.getItem("xp_" + currentUser)) || 0;
+  xp += amount;
+  localStorage.setItem("xp_" + currentUser, xp);
+  document.getElementById("xp").innerText = xp;
+  updateLeaderboard();
+}
+
+function saveHomework() {
+  localStorage.setItem("homework_" + currentUser,
+    document.getElementById("homework").value);
+
+  let streak = parseInt(localStorage.getItem("streak_" + currentUser)) || 0;
+  streak += 1;
+  localStorage.setItem("streak_" + currentUser, streak);
+  document.getElementById("streak").innerText = streak;
+
+  addXP(20);
+}
+
+function updateLeaderboard() {
+  let ranking = users.map(user => {
+    return {
+      name: user,
+      xp: parseInt(localStorage.getItem("xp_" + user)) || 0
+    };
+  });
+
+  ranking.sort((a,b)=>b.xp-a.xp);
+
+  let html = "";
+  ranking.forEach((u,i)=>{
+    html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>`;
+  });
+
+  document.getElementById("leaderboard").innerHTML = html;
 }
 </script>
 
