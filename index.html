@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>German Special Forces</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
+
 body {
   font-family: 'Roboto', sans-serif;
   margin: 0;
@@ -16,6 +17,9 @@ body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 body::before {
@@ -23,17 +27,17 @@ body::before {
   position: fixed;
   width: 100%;
   height: 100%;
-  background: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.9);
   z-index: 0;
 }
 
 .container {
+  width: 95%;
   max-width: 900px;
-  margin: 50px auto;
-  background: rgba(255,255,255,0.95);
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.96);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
   position: relative;
   z-index: 1;
 }
@@ -41,6 +45,18 @@ body::before {
 h1 {
   font-family: 'Montserrat', sans-serif;
   text-align: center;
+  margin-bottom: 30px;
+}
+
+#login {
+  text-align: center;
+}
+
+input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 250px;
 }
 
 button {
@@ -71,10 +87,10 @@ button {
 }
 
 .progress-container {
-  background: #ccc;
+  background: #ddd;
   border-radius: 20px;
   height: 25px;
-  margin-bottom: 20px;
+  margin: 20px 0;
   overflow: hidden;
 }
 
@@ -89,7 +105,7 @@ button {
   display: inline-block;
   background: #3498db;
   color: white;
-  padding: 12px 20px;
+  padding: 10px 20px;
   margin: 5px;
   border-radius: 8px;
   cursor: pointer;
@@ -99,14 +115,15 @@ button {
   background: #2980b9;
 }
 
-#dashboard { display: none; }
-
 #exercise {
   background: #ecf0f1;
-  padding: 20px;
-  border-radius: 10px;
+  padding: 25px;
+  border-radius: 12px;
   margin-top: 20px;
 }
+
+#dashboard { display: none; }
+
 </style>
 </head>
 
@@ -114,16 +131,16 @@ button {
 
 <div class="container">
 
-  <!-- LOGIN SCREEN -->
+  <!-- LOGIN -->
   <div id="login">
     <h1>🇩🇪 German Special Forces</h1>
     <h3>Login / Register</h3>
-    <input id="username" placeholder="Enter username" style="padding:10px;border-radius:8px;border:1px solid #ccc;">
+    <input id="username" placeholder="Enter username">
     <br><br>
     <button class="primary-btn" id="loginBtn">Start Mission</button>
   </div>
 
-  <!-- MAIN DASHBOARD -->
+  <!-- DASHBOARD -->
   <div id="dashboard">
 
     <h1>🇩🇪 German Special Forces</h1>
@@ -140,8 +157,6 @@ button {
     <div id="weeks"></div>
 
     <div id="exercise"></div>
-
-    <audio id="audioPlayer" controls style="width:100%;margin-top:15px;"></audio>
 
   </div>
 
@@ -163,6 +178,19 @@ const db = getFirestore(app);
 
 let currentUser;
 let userData = { xp:0, streak:0, week:1, exerciseIndex:0 };
+
+const exercisesWeek1 = [
+  {q:"Hello", a:["Hallo","Tschüss","Danke"], correct:0},
+  {q:"Goodbye", a:["Bitte","Tschüss","Ja"], correct:1},
+  {q:"Thank you", a:["Danke","Nein","Hallo"], correct:0},
+  {q:"Yes", a:["Nein","Ja","Bitte"], correct:1},
+  {q:"No", a:["Ja","Nein","Hallo"], correct:1},
+  {q:"Please", a:["Bitte","Danke","Hallo"], correct:0},
+  {q:"Good morning", a:["Guten Morgen","Gute Nacht","Hallo"], correct:0},
+  {q:"Good night", a:["Guten Tag","Gute Nacht","Danke"], correct:1},
+  {q:"How are you?", a:["Wie geht's?","Was ist das?","Wo bist du?"], correct:0},
+  {q:"I am fine", a:["Ich bin müde","Ich bin gut","Ich bin traurig"], correct:1}
+];
 
 const loginBtn = document.getElementById("loginBtn");
 const loginDiv = document.getElementById("login");
@@ -193,13 +221,11 @@ loginBtn.onclick = async () => {
 function renderWeeks(){
   const weeksDiv = document.getElementById("weeks");
   weeksDiv.innerHTML="";
-  for(let i=1;i<=1;i++){
-    const btn=document.createElement("div");
-    btn.className="week-card";
-    btn.innerText="Week "+i;
-    btn.onclick=()=>loadWeek(i);
-    weeksDiv.appendChild(btn);
-  }
+  const btn=document.createElement("div");
+  btn.className="week-card";
+  btn.innerText="Week 1";
+  btn.onclick=()=>loadWeek(1);
+  weeksDiv.appendChild(btn);
 }
 
 function updateStats(){
@@ -208,37 +234,57 @@ function updateStats(){
 }
 
 function updateProgress(){
-  const percent=(userData.exerciseIndex/50)*100;
+  const percent=(userData.exerciseIndex/exercisesWeek1.length)*100;
   document.getElementById("progressBar").style.width=percent+"%";
 }
 
-function loadWeek(week){
+function loadWeek(){
   renderExercise();
-  document.getElementById("audioPlayer").src="YOUR_AUDIO_PLACEHOLDER.mp3";
 }
 
 function renderExercise(){
   const exDiv=document.getElementById("exercise");
-  exDiv.innerHTML="<h3>Sample Question</h3>";
+  exDiv.innerHTML="";
 
-  ["A","B","C"].forEach(choice=>{
+  if(userData.exerciseIndex >= exercisesWeek1.length){
+    exDiv.innerHTML="<h2>🎉 Week Completed!</h2>";
+    return;
+  }
+
+  const current = exercisesWeek1[userData.exerciseIndex];
+
+  const question=document.createElement("h3");
+  question.innerText=current.q;
+  exDiv.appendChild(question);
+
+  current.a.forEach((answer,index)=>{
     const btn=document.createElement("button");
     btn.className="answer-btn";
-    btn.innerText=choice;
-    btn.onclick=()=>handleAnswer();
+    btn.innerText=answer;
+    btn.onclick=()=>handleAnswer(index);
     exDiv.appendChild(btn);
   });
 
   updateProgress();
 }
 
-async function handleAnswer(){
-  userData.xp+=10;
-  userData.streak+=1;
-  userData.exerciseIndex+=1;
+async function handleAnswer(selected){
+  const correct = exercisesWeek1[userData.exerciseIndex].correct;
+
+  if(selected===correct){
+    userData.xp+=10;
+    userData.streak+=1;
+  } else {
+    userData.streak=0;
+  }
+
+  userData.exerciseIndex++;
+
   updateStats();
   updateProgress();
+
   await setDoc(doc(db,"users",currentUser),userData);
+
   renderExercise();
 }
 
