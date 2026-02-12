@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>German Special Forces</title>
-  
+
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ---------- BODY & BACKGROUND ---------- */
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -17,7 +16,6 @@
       min-height: 100vh;
       color: #333;
       overflow-x: hidden;
-      /* Shutterstock image as full background */
       background-image: url('https://image.shutterstock.com/image-vector/deutsch-interpreter-language-online-german-260nw-2204068283.jpg');
       background-size: cover;
       background-position: center;
@@ -26,7 +24,7 @@
       position: relative;
     }
 
-    /* Overlay to dim background and improve readability */
+    /* Overlay */
     body::before {
       content: "";
       position: fixed;
@@ -38,7 +36,7 @@
       pointer-events: none;
     }
 
-    /* ---------- APP CONTAINER ---------- */
+    /* App container */
     #app {
       max-width: 900px;
       margin: 50px auto;
@@ -50,7 +48,6 @@
       z-index: 1;
     }
 
-    /* ---------- HEADER ---------- */
     header {
       text-align: center;
       margin-bottom: 30px;
@@ -65,14 +62,37 @@
       margin: 5px 0 0;
     }
 
-    /* ---------- BANNER IMAGE ---------- */
-    #app img.banner {
-      width: 100%;
-      border-radius: 15px;
-      margin-bottom: 20px;
+    /* Login screen */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #login-screen input {
+      padding: 10px 15px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      width: 200px;
+    }
+    #login-screen button {
+      padding: 12px 25px;
+      margin: 10px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    #login-screen button:hover {
+      background: #2980b9;
     }
 
-    /* ---------- XP & STREAK ---------- */
+    /* Stats & progress */
     #stats {
       display: flex;
       justify-content: space-between;
@@ -80,8 +100,6 @@
       font-weight: bold;
       color: #2C3E50;
     }
-
-    /* ---------- PROGRESS BAR ---------- */
     .progress-container {
       width: 100%;
       background: #bdc3c7;
@@ -98,7 +116,7 @@
       transition: width 0.4s;
     }
 
-    /* ---------- WEEKS CARDS ---------- */
+    /* Weeks */
     #weeks {
       display: flex;
       flex-wrap: wrap;
@@ -123,7 +141,7 @@
       background: #2980b9;
     }
 
-    /* ---------- EXERCISE CARD ---------- */
+    /* Exercise card */
     #exercise {
       background: #ecf0f1;
       padding: 25px;
@@ -132,7 +150,7 @@
       min-height: 200px;
     }
 
-    /* ---------- BUTTONS ---------- */
+    /* Buttons */
     button.answer-btn, button#submit-btn {
       background: #2ecc71;
       border: none;
@@ -148,7 +166,7 @@
       background: #27ae60;
     }
 
-    /* ---------- AUDIO ---------- */
+    /* Audio */
     audio {
       width: 100%;
       margin-top: 10px;
@@ -156,69 +174,158 @@
       outline: none;
     }
 
-    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 600px) {
-      #weeks {
-        flex-direction: column;
-        align-items: center;
-      }
-      .week-card {
-        width: 80%;
-      }
+      #weeks { flex-direction: column; align-items: center; }
+      .week-card { width: 80%; }
     }
   </style>
-</head>
-<body>
-  <div id="app">
-    <header>
-      <h1>🇩🇪 German Special Forces</h1>
-      <p>Learn German, one mission at a time</p>
-    </header>
 
-    <!-- XP and streak -->
-    <div id="stats">
-      <span id="xp">XP: 0</span>
-      <span id="streak">Streak: 0</span>
-    </div>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    <!-- Progress bar -->
-    <div class="progress-container">
-      <div class="progress-bar" id="progress-bar"></div>
-    </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
+      authDomain: "german-special-forces.firebaseapp.com",
+      projectId: "german-special-forces",
+      storageBucket: "german-special-forces.appspot.com",
+      messagingSenderId: "440759850329",
+      appId: "1:440759850329:web:33a1f0116e1c32f2132848"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    <!-- Weeks container -->
-    <div id="weeks">
-      <!-- JS will populate week cards here -->
-    </div>
+    // ---- UI ELEMENTS ----
+    const appDiv = document.getElementById('app');
 
-    <!-- Exercise card -->
-    <div id="exercise">
-      <!-- JS will populate exercises here -->
-    </div>
+    const loginScreen = document.createElement('div');
+    loginScreen.id = "login-screen";
+    loginScreen.innerHTML = `
+      <h2>Login / Register</h2>
+      <input type="text" id="username" placeholder="Enter username" />
+      <button id="login-btn">Start Mission</button>
+    `;
+    appDiv.prepend(loginScreen);
 
-    <!-- Submit button -->
-    <button id="submit-btn">Submit</button>
+    const usernameInput = loginScreen.querySelector('#username');
+    const loginBtn = loginScreen.querySelector('#login-btn');
 
-    <!-- Audio player -->
-    <audio id="audio-player" controls></audio>
-  </div>
+    let currentUser = null;
+    let userData = { xp:0, streak:0, week:1, exerciseIndex:0 };
 
-  <!-- JS script -->
-  <script src="app.js"></script>
+    // ---- Week 1 Exercises (50 sample MCQs, can expand) ----
+    const week1Exercises = [
+      { question: "Hallo means?", choices:["Hello","Goodbye","Thanks"], answer: "Hello" },
+      { question: "Danke means?", choices:["Hello","Thank you","Sorry"], answer: "Thank you" },
+      { question: "Tschüss means?", choices:["Hi","Goodbye","Please"], answer: "Goodbye" },
+      // ... add 47 more exercises here
+    ];
+    while(week1Exercises.length<50){
+      week1Exercises.push({ question:"Dummy question", choices:["A","B","C"], answer:"A" });
+    }
 
-  <!-- Example JS snippet to populate weeks (fixes empty weeks issue) -->
-  <script>
-    const weeksContainer = document.getElementById('weeks');
-    const totalWeeks = 10; // adjust based on how many weeks you have
-    for (let i = 1; i <= totalWeeks; i++) {
-      const card = document.createElement('div');
-      card.className = 'week-card';
-      card.textContent = `Week ${i}`;
-      card.addEventListener('click', () => {
-        alert(`You clicked Week ${i}`); // replace with your existing JS handler
+    const weeksContainer = document.createElement('div');
+    weeksContainer.id = 'weeks';
+    appDiv.appendChild(weeksContainer);
+
+    const exerciseDiv = document.getElementById('exercise');
+    const submitBtn = document.getElementById('submit-btn');
+    const xpSpan = document.getElementById('xp');
+    const streakSpan = document.getElementById('streak');
+    const progressBar = document.getElementById('progress-bar');
+    const audioPlayer = document.getElementById('audio-player');
+
+    // ---- LOGIN HANDLER ----
+    loginBtn.addEventListener('click', async ()=>{
+      const username = usernameInput.value.trim().toLowerCase();
+      if(!username){ alert("Enter username"); return; }
+      currentUser = username;
+
+      const docRef = doc(db, "users", currentUser);
+      const docSnap = await getDoc(docRef);
+      if(docSnap.exists()){
+        userData = docSnap.data();
+      } else {
+        await setDoc(docRef, userData);
+      }
+
+      loginScreen.style.display = "none";
+      renderWeeks();
+      loadWeek(userData.week);
+    });
+
+    // ---- RENDER WEEKS ----
+    function renderWeeks(){
+      weeksContainer.innerHTML = "";
+      for(let i=1;i<=1;i++){ // only week 1 for now
+        const card = document.createElement('div');
+        card.className = 'week-card';
+        card.textContent = `Week ${i}`;
+        card.addEventListener('click', ()=>{ loadWeek(i); });
+        weeksContainer.appendChild(card);
+      }
+    }
+
+    let currentWeek = 1;
+    let currentExerciseIndex = 0;
+
+    function loadWeek(week){
+      currentWeek = week;
+      if(week===1){
+        renderExercise(week1Exercises[currentExerciseIndex]);
+      }
+      // placeholder audio
+      audioPlayer.src = "https://www.example.com/placeholder.mp3";
+    }
+
+    function renderExercise(ex){
+      exerciseDiv.innerHTML = `<h3>${ex.question}</h3>`;
+      ex.choices.forEach(c=>{
+        const btn = document.createElement('button');
+        btn.textContent = c;
+        btn.className = "answer-btn";
+        btn.onclick = ()=>{ handleAnswer(c, ex.answer); };
+        exerciseDiv.appendChild(btn);
       });
-      weeksContainer.appendChild(card);
+      updateProgress();
+    }
+
+    function handleAnswer(choice, correct){
+      if(choice===correct){
+        alert("✅ Correct +10 XP");
+        userData.xp += 10;
+        userData.streak += 1;
+      } else {
+        alert("❌ Wrong, try again!");
+        userData.streak = 0;
+      }
+      currentExerciseIndex++;
+      if(currentExerciseIndex>=week1Exercises.length){
+        alert("🎉 Week Complete!");
+        userData.week++;
+        currentExerciseIndex=0;
+      }
+      userData.exerciseIndex = currentExerciseIndex;
+      saveUserData();
+      if(userData.week===1) renderExercise(week1Exercises[currentExerciseIndex]);
+    }
+
+    async function saveUserData(){
+      const docRef = doc(db, "users", currentUser);
+      await setDoc(docRef, userData);
+      xpSpan.textContent = `XP: ${userData.xp}`;
+      streakSpan.textContent = `Streak: ${userData.streak}`;
+      updateProgress();
+    }
+
+    function updateProgress(){
+      const progress = (currentExerciseIndex / week1Exercises.length)*100;
+      progressBar.style.width = `${progress}%`;
     }
   </script>
+</head>
+<body>
+  <div id="app"></div>
 </body>
 </html>
