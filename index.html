@@ -3,35 +3,11 @@
 <head>
   <title>German Special Forces Academy</title>
   <style>
-    body {
-      font-family: Arial;
-      background: #111;
-      color: white;
-      padding: 30px;
-    }
+    body { font-family: Arial; background: #111; color: white; padding: 30px; }
     h1 { color: #4CAF50; }
-    button {
-      padding: 8px 15px;
-      margin: 5px 5px 5px 0;
-      background: #4CAF50;
-      border: none;
-      color: white;
-      cursor: pointer;
-    }
-    .section {
-      margin-top: 20px;
-      padding: 20px;
-      background: #222;
-      border-radius: 8px;
-    }
-    textarea {
-      width: 100%;
-      margin-top: 10px;
-      padding: 8px;
-      background: #333;
-      color: white;
-      border: none;
-    }
+    button { padding: 8px 15px; margin: 5px; background: #4CAF50; border: none; color: white; cursor: pointer; }
+    .section { margin-top: 20px; padding: 20px; background: #222; border-radius: 8px; }
+    textarea { width: 100%; margin-top: 10px; padding: 8px; background: #333; color: white; border: none; }
     .hidden { display: none; }
   </style>
 </head>
@@ -67,12 +43,26 @@
   </div>
 
   <div class="section">
-    <h2>This Week's Lesson</h2>
-    <p>Week 1: Present tense + sentence structure.</p>
+    <h2>Week 1 Lesson: Basics</h2>
+    <p><b>Sentence Structure:</b> Subject – Verb – Object</p>
+    <p><b>Example:</b> Ich lerne Deutsch. (I learn German)</p>
+    <p><b>Present Tense:</b> sein (ich bin, du bist…) / haben (ich habe, du hast…)</p>
+    <p><b>Vocabulary:</b> Hallo, Tschüss, Ja, Nein, Bitte, Danke</p>
+    <p><b>Phrases:</b> Wie heißt du? Ich heiße … Wie geht’s? Mir geht’s gut.</p>
+  </div>
+
+  <div class="section">
+    <h2>Week 1 Exercise</h2>
+    <p>Translate: "I am a student."</p>
+    <button class="exerciseBtn" data-answer="Ich bin ein Student.">Ich bin ein Student.</button>
+    <button class="exerciseBtn" data-answer="Ich habe ein Student.">Ich habe ein Student.</button>
+    <button class="exerciseBtn" data-answer="Ich sind ein Student.">Ich sind ein Student.</button>
+    <p id="exerciseResult"></p>
   </div>
 
   <div class="section">
     <h2>Homework</h2>
+    <p>Write 3 sentences introducing yourself in German (use vocab + phrases from lesson).</p>
     <textarea id="homework" rows="6"></textarea>
     <button id="saveHomeworkBtn">Submit Homework (+20 XP)</button>
   </div>
@@ -99,42 +89,40 @@ const firebaseConfig = {
   appId: "1:440759850329:web:33a1f0116e1c32f2132848"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentUser = null;
 let users = ["Asaf","Brother1","Brother2"];
 
-// FUNCTIONS EXPOSED TO HTML
-window.login = async function(name) {
+// LOGIN / LOGOUT
+window.login = async function(name){
   currentUser = name;
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("welcome").innerText = "Welcome, " + name;
 
-  // Initialize user in Firestore if not exists
   const userRef = doc(db, "users", currentUser);
   const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) {
-    await setDoc(userRef, { xp: 0, streak: 0, homework: "" });
+  if(!userSnap.exists()){
+    await setDoc(userRef, {xp:0, streak:0, homework:""});
   }
 
   loadUser();
   updateLeaderboard();
-};
+}
 
-window.logout = function() {
+window.logout = function(){
   currentUser = null;
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("login").classList.remove("hidden");
-};
+}
 
 // LOAD USER DATA
-async function loadUser() {
+async function loadUser(){
   const userRef = doc(db, "users", currentUser);
   const userSnap = await getDoc(userRef);
-  if (userSnap.exists()) {
+  if(userSnap.exists()){
     const data = userSnap.data();
     document.getElementById("xp").innerText = data.xp || 0;
     document.getElementById("streak").innerText = data.streak || 0;
@@ -143,15 +131,15 @@ async function loadUser() {
 }
 
 // SAVE HOMEWORK
-window.saveHomework = async function() {
-  if (!currentUser) return;
+window.saveHomework = async function(){
+  if(!currentUser) return;
   const homeworkText = document.getElementById("homework").value;
   const userRef = doc(db, "users", currentUser);
 
   const userSnap = await getDoc(userRef);
   let data = userSnap.data();
-  const newStreak = (data.streak || 0) + 1;
-  const newXP = (data.xp || 0) + 20;
+  const newStreak = (data.streak || 0)+1;
+  const newXP = (data.xp || 0)+20;
 
   await setDoc(userRef, {
     xp: newXP,
@@ -161,45 +149,53 @@ window.saveHomework = async function() {
 
   document.getElementById("xp").innerText = newXP;
   document.getElementById("streak").innerText = newStreak;
-
   updateLeaderboard();
-};
+
+  alert("Homework submitted! Send your homework to the AI for correction.");
+}
 
 // ADD XP MANUALLY
-window.addXP = async function(amount) {
-  if (!currentUser) return;
+window.addXP = async function(amount){
+  if(!currentUser) return;
   const userRef = doc(db, "users", currentUser);
   const userSnap = await getDoc(userRef);
   let data = userSnap.data();
-  const newXP = (data.xp || 0) + amount;
-  await updateDoc(userRef, { xp: newXP });
+  const newXP = (data.xp || 0)+amount;
+  await updateDoc(userRef,{xp:newXP});
   document.getElementById("xp").innerText = newXP;
-
   updateLeaderboard();
-};
+}
 
-// UPDATE LEADERBOARD
-async function updateLeaderboard() {
+// LEADERBOARD
+async function updateLeaderboard(){
   let ranking = [];
-  for (let u of users) {
+  for(let u of users){
     const userRef = doc(db, "users", u);
     const userSnap = await getDoc(userRef);
     let xp = 0;
-    if (userSnap.exists()) xp = userSnap.data().xp || 0;
-    ranking.push({ name: u, xp: xp });
+    if(userSnap.exists()) xp = userSnap.data().xp || 0;
+    ranking.push({name:u, xp: xp});
   }
 
   ranking.sort((a,b)=>b.xp-a.xp);
-
   let html = "";
-  ranking.forEach((u,i)=>{
-    html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>`;
-  });
-
+  ranking.forEach((u,i)=>{ html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>` });
   document.getElementById("leaderboard").innerHTML = html;
 }
 
-// BUTTON EVENT LISTENERS (module-safe)
+// EXERCISE CHECKING
+window.checkAnswer = async function(userAnswer){
+  const correct = "Ich bin ein Student.";
+  const resultEl = document.getElementById("exerciseResult");
+  if(userAnswer === correct){
+    resultEl.innerText = "✅ Correct! +10 XP";
+    addXP(10);
+  } else {
+    resultEl.innerText = "❌ Wrong, try again!";
+  }
+}
+
+// EVENT LISTENERS
 document.getElementById("loginAsaf").addEventListener("click",()=>login("Asaf"));
 document.getElementById("loginB1").addEventListener("click",()=>login("Brother1"));
 document.getElementById("loginB2").addEventListener("click",()=>login("Brother2"));
@@ -207,6 +203,11 @@ document.getElementById("logoutBtn").addEventListener("click",()=>logout());
 document.getElementById("saveHomeworkBtn").addEventListener("click",()=>saveHomework());
 document.getElementById("xp10Btn").addEventListener("click",()=>addXP(10));
 document.getElementById("xp25Btn").addEventListener("click",()=>addXP(25));
+
+// EXERCISE BUTTONS
+document.querySelectorAll(".exerciseBtn").forEach(btn=>{
+  btn.addEventListener("click",()=>checkAnswer(btn.dataset.answer));
+});
 </script>
 
 </body>
