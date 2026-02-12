@@ -1,4 +1,4 @@
-// Firebase config (replace with your keys)
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
   authDomain: "german-special-forces.firebaseapp.com",
@@ -13,7 +13,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// UI Elements
+// Elements
 const xpDisplay = document.getElementById("xpDisplay");
 const streakDisplay = document.getElementById("streakDisplay");
 const weekDisplay = document.getElementById("weekDisplay");
@@ -26,7 +26,7 @@ const feedback = document.getElementById("feedback");
 const progressFill = document.getElementById("progressFill");
 const audioPlayer = document.getElementById("audioPlayer");
 
-// Week 1 Exercises (50)
+// Week 1 Exercises (50 mixed)
 const week1Exercises = [
   {type:"mcq", question:"Wie sagt man 'Hello' auf Deutsch?", options:["Hallo","Tschüss","Danke"], answer:"Hallo"},
   {type:"mcq", question:"Was bedeutet 'Danke'?", options:["Thank you","Please","Hello"], answer:"Thank you"},
@@ -79,36 +79,33 @@ const week1Exercises = [
   {type:"mcq", question:"Was bedeutet 'Auto'?", options:["Car","Bike","Plane"], answer:"Car"}
 ];
 
-// Bonus German audio playlist
+// Bonus audio playlist
 const audioClips = [
   "https://www.freesound.org/data/previews/341/341695_3248244-lq.mp3",
   "https://www.freesound.org/data/previews/256/256113_4486188-lq.mp3",
   "https://www.freesound.org/data/previews/415/415209_5121236-lq.mp3"
 ];
 
-// App state
 let currentUser = null;
-let userData = { xp:0, streak:0, week:1, exerciseIndex:0 };
+let userData = {xp:0, streak:0, week:1, exerciseIndex:0};
 let currentExercises = [];
 
-// Initialize
 auth.signInAnonymously().then(user => {
   currentUser = user.user;
   const docRef = db.collection("users").doc(currentUser.uid);
-  docRef.get().then(doc => {
-    if(doc.exists){
-      userData = doc.data();
-    }
+  docRef.get().then(doc=>{
+    if(doc.exists) userData = doc.data();
     startApp();
-  }).catch(err => console.error(err));
-}).catch(err => console.error(err));
+  }).catch(console.error);
+}).catch(console.error);
 
 function startApp(){
   weekDisplay.innerText = `Week: ${userData.week}`;
   xpDisplay.innerText = `XP: ${userData.xp}`;
   streakDisplay.innerText = `Streak: ${userData.streak}`;
   
-  // Sidebar weeks
+  // Sidebar
+  weeksList.innerHTML = "";
   for(let i=1;i<=10;i++){
     const li = document.createElement("li");
     li.innerText = `Week ${i}`;
@@ -118,14 +115,12 @@ function startApp(){
   }
 
   loadWeek(userData.week);
-
-  // Play random bonus audio
   audioPlayer.src = audioClips[Math.floor(Math.random()*audioClips.length)];
-  audioPlayer.play().catch(()=>{}); // autoplay may be blocked
+  audioPlayer.play().catch(()=>{});
 }
 
 function loadWeek(week){
-  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5); // randomize
+  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5);
   userData.exerciseIndex = 0;
   showExercise();
 }
@@ -159,7 +154,7 @@ submitBtn.onclick = ()=>{
 
 function checkAnswer(ans){
   const ex = currentExercises[userData.exerciseIndex];
-  if(ans.toLowerCase() === ex.answer.toLowerCase()){
+  if(ans.toLowerCase()===ex.answer.toLowerCase()){
     feedback.innerText = `✔ Correct +10 XP`;
     userData.xp += 10;
     userData.streak += 1;
@@ -170,12 +165,12 @@ function checkAnswer(ans){
   }
 
   userData.exerciseIndex += 1;
-  if(userData.exerciseIndex >= currentExercises.length){
+  if(userData.exerciseIndex>=currentExercises.length){
     userData.week += 1;
-    alert("🎉 You finished Week "+(userData.week-1)+"! Week "+userData.week+" unlocked!");
+    alert(`🎉 You finished Week ${userData.week-1}! Week ${userData.week} unlocked!`);
     loadWeek(userData.week);
   } else {
-    setTimeout(showExercise,500);
+    setTimeout(showExercise,300);
   }
 
   xpDisplay.innerText = `XP: ${userData.xp}`;
@@ -184,7 +179,5 @@ function checkAnswer(ans){
 
   // Save progress
   db.collection("users").doc(currentUser.uid).set(userData);
-  
-  // Update progress bar
   progressFill.style.width = ((userData.exerciseIndex+1)/currentExercises.length)*100+"%";
 }
