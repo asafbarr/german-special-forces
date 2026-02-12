@@ -1,4 +1,4 @@
-// ====== Firebase config ======
+// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
   authDomain: "german-special-forces.firebaseapp.com",
@@ -12,41 +12,28 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ====== Course Skeleton (Week 1-4 example) ======
+// ===== Course Data (Week 1 only, you can expand) =====
 const course = [
-  {week:1,level:"A1",lesson:"Basics: Greetings, Present Tense, Simple Sentences",
-   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+  {week:1, lesson:"Greetings & Basics", media:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
    exercises:[
-     {id:1,type:"multiple",question:"Translate: Hello",options:["Hallo","Tschüss","Ja"],answer:0},
-     {id:2,type:"multiple",question:"Translate: Bye",options:["Danke","Tschüss","Bitte"],answer:1},
-     {id:3,type:"multiple",question:"Translate: Yes",options:["Ja","Nein","Bitte"],answer:0},
-     {id:4,type:"open",question:"Write: My name is Asaf.",answer:"Ich heiße Asaf."}
+     {type:"multiple", question:"Hello", options:["Hallo","Tschüss","Ja"], answer:0},
+     {type:"multiple", question:"Bye", options:["Danke","Tschüss","Bitte"], answer:1},
+     {type:"multiple", question:"Yes", options:["Ja","Nein","Bitte"], answer:0},
+     {type:"open", question:"Write: My name is Asaf.", answer:"Ich heiße Asaf."},
+     {type:"open", question:"Write: I am happy.", answer:"Ich bin glücklich."}
    ]},
-  {week:2,level:"A1",lesson:"Numbers, Family, Days of Week",
-   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+  {week:2, lesson:"Numbers & Family", media:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
    exercises:[
-     {id:1,type:"multiple",question:"Translate: One",options:["Eins","Zwei","Drei"],answer:0},
-     {id:2,type:"multiple",question:"Translate: Two",options:["Zwei","Eins","Drei"],answer:0},
-     {id:3,type:"open",question:"Write: My brother",answer:"Mein Bruder"}
-   ]},
-  {week:3,level:"A2",lesson:"Past tense, common verbs",
-   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
-   exercises:[
-     {id:1,type:"multiple",question:"Translate: I went",options:["Ich ging","Ich gehe","Ich gehe"],answer:0},
-     {id:2,type:"open",question:"Write: He ate",answer:"Er aß"}
-   ]},
-  {week:4,level:"A2",lesson:"Future tense, daily activities",
-   media:"https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
-   exercises:[
-     {id:1,type:"multiple",question:"Translate: I will go",options:["Ich werde gehen","Ich gehe","Ich ging"],answer:0},
-     {id:2,type:"open",question:"Write: She will eat",answer:"Sie wird essen"}
+     {type:"multiple", question:"One", options:["Eins","Zwei","Drei"], answer:0},
+     {type:"multiple", question:"Two", options:["Zwei","Eins","Drei"], answer:0},
+     {type:"open", question:"Write: My brother", answer:"Mein Bruder"}
    ]}
 ];
 
-// ====== Global Variables ======
+// ===== Global Variables =====
 let userId=null, currentWeek=1, currentExerciseIndex=0, xp=0, streak=0;
 
-// ====== UI Elements ======
+// ===== UI Elements =====
 const questionDiv=document.getElementById("question");
 const optionsDiv=document.getElementById("options");
 const answerInput=document.getElementById("answerInput");
@@ -57,75 +44,70 @@ const streakDisplay=document.getElementById("streakDisplay");
 const weekDisplay=document.getElementById("weekDisplay");
 const audioPlayer=document.getElementById("audioPlayer");
 
-// ====== Auth ======
+// ===== Auth =====
 auth.signInAnonymously().then(user=>{
   userId=user.uid;
-  loadUserData();
+  initUser();
 });
 
-// ====== Load User Data ======
-function loadUserData(){
-  db.collection("users").doc(userId).get().then(doc=>{
+function initUser(){
+  const userRef = db.collection("users").doc(userId);
+  userRef.get().then(doc=>{
     if(doc.exists){
-      const data=doc.data();
-      currentWeek=data.currentWeek||1;
-      xp=data.xp||0;
-      streak=data.streak||0;
-      currentExerciseIndex=data.currentExerciseIndex||0;
+      const data = doc.data();
+      currentWeek = data.currentWeek || 1;
+      currentExerciseIndex = data.currentExerciseIndex || 0;
+      xp = data.xp || 0;
+      streak = data.streak || 0;
+      initUI();
     } else {
-      db.collection("users").doc(userId).set({
-        currentWeek:1, xp:0, streak:0, currentExerciseIndex:0
-      });
+      userRef.set({currentWeek:1,currentExerciseIndex:0,xp:0,streak:0})
+        .then(()=> initUser());
     }
-    updateUI();
-    renderWeeksList();
-    loadExercise();
-    loadMedia();
   });
 }
 
-// ====== Update UI ======
-function updateUI(){
+// ===== Initialize UI =====
+function initUI(){
+  updateStats();
+  renderWeeks();
+  loadExercise();
+  loadMedia();
+}
+
+// ===== Update Stats =====
+function updateStats(){
   xpDisplay.textContent="XP: "+xp;
   streakDisplay.textContent="Streak: "+streak;
   weekDisplay.textContent="Week: "+currentWeek;
   updateProgressBar();
 }
 
-// ====== Render Weeks Sidebar ======
-function renderWeeksList(){
-  const list=document.getElementById("weeksList");
+// ===== Render Weeks Sidebar =====
+function renderWeeks(){
+  const list = document.getElementById("weeksList");
   list.innerHTML="";
-  course.forEach(week=>{
+  course.forEach(w=>{
     const li=document.createElement("li");
-    li.textContent=`Week ${week.week}: ${week.lesson}`;
-    li.style.cursor="pointer";
-
-    if(week.week > currentWeek) {
-      li.style.opacity=0.4;
-      li.onclick=()=>alert("Finish previous weeks first!");
-    } else {
-      li.onclick=()=>{
-        currentWeek=week.week;
-        currentExerciseIndex=0;
-        updateUI();
-        loadExercise();
-        loadMedia();
-      };
-    }
-
-    if(week.week < currentWeek) li.textContent+=" ✅";
-
+    li.textContent=`Week ${w.week}: ${w.lesson}`;
+    if(w.week>currentWeek) li.classList.add("locked");
+    else li.onclick = ()=>{
+      currentWeek=w.week;
+      currentExerciseIndex=0;
+      updateStats();
+      loadExercise();
+      loadMedia();
+    };
+    if(w.week<currentWeek) li.textContent+=" ✅";
     list.appendChild(li);
   });
 }
 
-// ====== Load Exercise ======
+// ===== Load Exercise =====
 function loadExercise(){
-  const weekData=course.find(w=>w.week===currentWeek);
-  if(!weekData){ questionDiv.textContent="Course complete!"; optionsDiv.innerHTML=""; answerInput.style.display="none"; return; }
-
-  const ex=weekData.exercises[currentExerciseIndex];
+  const weekData = course.find(w=>w.week===currentWeek);
+  if(!weekData){ questionDiv.textContent="Course Complete!"; optionsDiv.innerHTML=""; answerInput.style.display="none"; return;}
+  const ex = weekData.exercises[currentExerciseIndex];
   questionDiv.textContent=ex.question;
   optionsDiv.innerHTML="";
   answerInput.style.display=ex.type==="open"?"block":"none";
@@ -133,20 +115,20 @@ function loadExercise(){
 
   if(ex.type==="multiple"){
     ex.options.forEach((opt,idx)=>{
-      const btn=document.createElement("button");
+      const btn = document.createElement("button");
       btn.textContent=opt;
-      btn.onclick=()=>checkAnswer(idx);
+      btn.classList.add("optionBtn");
+      btn.onclick = ()=> checkAnswer(idx);
       optionsDiv.appendChild(btn);
     });
   }
 }
 
-// ====== Check Answer ======
+// ===== Check Answer =====
 function checkAnswer(ans){
-  const weekData=course.find(w=>w.week===currentWeek);
-  const ex=weekData.exercises[currentExerciseIndex];
+  const weekData = course.find(w=>w.week===currentWeek);
+  const ex = weekData.exercises[currentExerciseIndex];
   let correct=false;
-
   if(ex.type==="multiple" && ans===ex.answer) correct=true;
   if(ex.type==="open" && answerInput.value.trim().toLowerCase()===ex.answer.toLowerCase()) correct=true;
 
@@ -158,8 +140,8 @@ function checkAnswer(ans){
     feedbackDiv.textContent="❌ Wrong, try again!";
   }
 
-  updateUI();
-  saveUserData(correct);
+  saveUser();
+  updateStats();
 
   if(correct){
     setTimeout(()=>{
@@ -169,43 +151,43 @@ function checkAnswer(ans){
         currentWeek++;
         currentExerciseIndex=0;
         loadMedia();
-        renderWeeksList();
+        renderWeeks();
       }
-      updateUI();
       loadExercise();
-    },1500);
+    },1200);
   }
 }
 
-// ====== Save User Data ======
-function saveUserData(correct){
+// ===== Save User =====
+function saveUser(){
   db.collection("users").doc(userId).set({
-    currentWeek: currentWeek,
-    xp: xp,
-    streak: streak,
-    currentExerciseIndex: currentExerciseIndex
+    currentWeek,
+    currentExerciseIndex,
+    xp,
+    streak
   });
 }
 
-// ====== Load Media ======
+// ===== Load Media =====
 function loadMedia(){
-  const weekData=course.find(w=>w.week===currentWeek);
+  const weekData = course.find(w=>w.week===currentWeek);
   if(weekData){
     audioPlayer.src=weekData.media;
     audioPlayer.load();
   }
 }
 
-// ====== Progress Bar ======
+// ===== Progress Bar =====
 function updateProgressBar(){
-  const weekData=course.find(w=>w.week===currentWeek);
+  const weekData = course.find(w=>w.week===currentWeek);
   const progress = (currentExerciseIndex/weekData.exercises.length)*100;
-  document.getElementById("progressFill").style.width = progress + "%";
+  document.getElementById("progressFill").style.width = progress+"%";
 }
 
-// ====== Submit Button for Open-ended ======
+// ===== Submit Button for open-ended =====
 submitBtn.onclick = () => {
-  const weekData=course.find(w=>w.week===currentWeek);
-  const ex=weekData.exercises[currentExerciseIndex];
+  const weekData = course.find(w=>w.week===currentWeek);
+  if(!weekData) return;
+  const ex = weekData.exercises[currentExerciseIndex];
   if(ex.type==="open") checkAnswer(null);
-}
+};
