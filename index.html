@@ -5,32 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>German Special Forces</title>
 <style>
-  body { font-family: sans-serif; background-color: #121212; color: #eee; padding: 20px; }
-  #exercise { margin-bottom: 20px; }
-  button { padding: 10px 20px; margin: 5px; cursor:pointer; }
-  #feedback { margin-top: 10px; height: 24px; }
-  #media { margin-top: 20px; }
-  input { padding: 5px; width: 300px; }
+body { font-family:sans-serif; background:#121212; color:#eee; display:flex; margin:0; }
+#sidebar { width:250px; background:#1e1e1e; padding:20px; height:100vh; overflow-y:auto; }
+#main { flex:1; padding:20px; }
+h1 { font-size:24px; margin-bottom:10px; }
+#exercise { margin-top:20px; }
+button { padding:8px 15px; margin:5px; cursor:pointer; border:none; border-radius:5px; }
+#feedback { height:24px; margin-top:10px; }
+#progressContainer { margin-top:20px; background:#555; height:20px; border-radius:10px; width:100%; }
+#progressFill { height:100%; width:0%; background:#4caf50; border-radius:10px; }
+input { padding:5px; width:300px; margin-top:10px; }
+audio { margin-top:20px; width:100%; }
+li { margin:8px 0; list-style:none; }
+li:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
 
-<h1>German Special Forces</h1>
-<div id="xpDisplay">XP: 0</div>
-<div id="streakDisplay">Streak: 0</div>
-<div id="weekDisplay">Week: 1</div>
-
-<div id="exercise">
-  <div id="question"></div>
-  <div id="options"></div>
-  <input type="text" id="answerInput" style="display:none;" placeholder="Type your answer here">
-  <button id="submitBtn">Submit</button>
+<div id="sidebar">
+  <h2>Weeks</h2>
+  <ul id="weeksList"></ul>
 </div>
 
-<div id="feedback"></div>
+<div id="main">
+  <h1>German Special Forces</h1>
+  <div id="xpDisplay">XP: 0</div>
+  <div id="streakDisplay">Streak: 0</div>
+  <div id="weekDisplay">Week: 1</div>
 
-<div id="media">
-  <audio id="audioPlayer" controls src=""></audio>
+  <div id="exercise">
+    <div id="question"></div>
+    <div id="options"></div>
+    <input type="text" id="answerInput" style="display:none;" placeholder="Type your answer here">
+    <button id="submitBtn">Submit</button>
+  </div>
+
+  <div id="feedback"></div>
+
+  <div id="progressContainer">
+    <div id="progressFill"></div>
+  </div>
+
+  <audio id="audioPlayer" controls></audio>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
