@@ -29,16 +29,61 @@ const feedback = document.getElementById("feedback");
 const progressFill = document.getElementById("progressFill");
 const audioPlayer = document.getElementById("audioPlayer");
 
-// Week 1 Exercises (50 exercises, mixed input + multiple-choice)
+// --- Week 1 Exercises (50 total) ---
 const week1Exercises = [
   {type:"mcq", question:"Hello in German is...", options:["Hallo","Tschüss","Bitte"], answer:"Hallo"},
   {type:"mcq", question:"Thank you in German is...", options:["Danke","Bitte","Entschuldigung"], answer:"Danke"},
   {type:"input", question:"Say 'Good morning' in German", answer:"Guten Morgen"},
   {type:"input", question:"Translate 'I am a student' into German", answer:"Ich bin ein Student"},
-  // ... add all 50 exercises here
+  {type:"mcq", question:"Good night in German is...", options:["Gute Nacht","Guten Tag","Hallo"], answer:"Gute Nacht"},
+  {type:"input", question:"Translate 'I like apples' into German", answer:"Ich mag Äpfel"},
+  {type:"mcq", question:"Yes in German is...", options:["Ja","Nein","Vielleicht"], answer:"Ja"},
+  {type:"input", question:"Say 'I am learning German'", answer:"Ich lerne Deutsch"},
+  {type:"mcq", question:"No in German is...", options:["Nein","Ja","Vielleicht"], answer:"Nein"},
+  {type:"input", question:"Translate 'My name is John' into German", answer:"Mein Name ist John"},
+  {type:"mcq", question:"Please in German is...", options:["Bitte","Danke","Hallo"], answer:"Bitte"},
+  {type:"input", question:"Say 'I am hungry' in German", answer:"Ich habe Hunger"},
+  {type:"mcq", question:"Goodbye in German is...", options:["Tschüss","Hallo","Danke"], answer:"Tschüss"},
+  {type:"input", question:"Translate 'I like music' into German", answer:"Ich mag Musik"},
+  {type:"mcq", question:"Excuse me / Sorry in German is...", options:["Entschuldigung","Bitte","Ja"], answer:"Entschuldigung"},
+  {type:"input", question:"Say 'I am happy' in German", answer:"Ich bin glücklich"},
+  {type:"mcq", question:"Water in German is...", options:["Wasser","Brot","Milch"], answer:"Wasser"},
+  {type:"input", question:"Translate 'I am tired' into German", answer:"Ich bin müde"},
+  {type:"mcq", question:"Bread in German is...", options:["Brot","Milch","Käse"], answer:"Brot"},
+  {type:"input", question:"Say 'I like dogs' in German", answer:"Ich mag Hunde"},
+  {type:"mcq", question:"Milk in German is...", options:["Milch","Wasser","Brot"], answer:"Milch"},
+  {type:"input", question:"Translate 'I am thirsty' into German", answer:"Ich habe Durst"},
+  {type:"mcq", question:"Cheese in German is...", options:["Käse","Brot","Milch"], answer:"Käse"},
+  {type:"input", question:"Say 'I am cold' in German", answer:"Mir ist kalt"},
+  {type:"mcq", question:"Friend in German is...", options:["Freund","Feind","Kollege"], answer:"Freund"},
+  {type:"input", question:"Translate 'I like reading' into German", answer:"Ich lese gern"},
+  {type:"mcq", question:"Family in German is...", options:["Familie","Freund","Lehrer"], answer:"Familie"},
+  {type:"input", question:"Say 'I am learning' in German", answer:"Ich lerne"},
+  {type:"mcq", question:"School in German is...", options:["Schule","Haus","Büro"], answer:"Schule"},
+  {type:"input", question:"Translate 'I have a book' into German", answer:"Ich habe ein Buch"},
+  {type:"mcq", question:"Teacher in German is...", options:["Lehrer","Schüler","Freund"], answer:"Lehrer"},
+  {type:"input", question:"Say 'I am listening to music' in German", answer:"Ich höre Musik"},
+  {type:"mcq", question:"Student in German is...", options:["Student","Lehrer","Freund"], answer:"Student"},
+  {type:"input", question:"Translate 'I like coffee' into German", answer:"Ich mag Kaffee"},
+  {type:"mcq", question:"Coffee in German is...", options:["Kaffee","Tee","Wasser"], answer:"Kaffee"},
+  {type:"input", question:"Say 'I like tea' in German", answer:"Ich mag Tee"},
+  {type:"mcq", question:"Tea in German is...", options:["Tee","Kaffee","Milch"], answer:"Tee"},
+  {type:"input", question:"Translate 'I am at home' into German", answer:"Ich bin zu Hause"},
+  {type:"mcq", question:"House in German is...", options:["Haus","Schule","Büro"], answer:"Haus"},
+  {type:"input", question:"Say 'I have a dog' in German", answer:"Ich habe einen Hund"},
+  {type:"mcq", question:"Dog in German is...", options:["Hund","Katze","Maus"], answer:"Hund"},
+  {type:"input", question:"Translate 'I have a cat' into German", answer:"Ich habe eine Katze"},
+  {type:"mcq", question:"Cat in German is...", options:["Katze","Hund","Vogel"], answer:"Katze"},
+  {type:"input", question:"Say 'I like to swim' in German", answer:"Ich schwimme gern"},
+  {type:"mcq", question:"Car in German is...", options:["Auto","Fahrrad","Bus"], answer:"Auto"},
+  {type:"input", question:"Translate 'I am driving a car' into German", answer:"Ich fahre ein Auto"},
+  {type:"mcq", question:"Bicycle in German is...", options:["Fahrrad","Auto","Bus"], answer:"Fahrrad"},
+  {type:"input", question:"Say 'I am riding a bicycle' in German", answer:"Ich fahre ein Fahrrad"},
+  {type:"mcq", question:"Bus in German is...", options:["Bus","Auto","Zug"], answer:"Bus"},
+  {type:"input", question:"Translate 'I am taking the bus' into German", answer:"Ich nehme den Bus"},
 ];
 
-// Bonus audio clips (random playback)
+// Bonus audio clips
 const audioClips = [
   "https://www.freesound.org/data/previews/341/341695_3248244-lq.mp3",
   "https://www.freesound.org/data/previews/256/256113_4486188-lq.mp3",
@@ -49,7 +94,7 @@ let username = "";
 let userData = {xp:0, streak:0, week:1, exerciseIndex:0};
 let currentExercises = [];
 
-// --- LOGIN HANDLER ---
+// --- LOGIN ---
 loginBtn.onclick = async ()=>{
   const rawUsername = usernameInput.value.trim();
   if(!rawUsername) return alert("Enter a username!");
@@ -92,9 +137,8 @@ function startApp(){
 
 // --- LOAD WEEK ---
 function loadWeek(week){
-  // For now all weeks use Week 1 exercises
-  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5); 
-  userData.exerciseIndex = 0;
+  currentExercises = [...week1Exercises].sort(()=>Math.random()-0.5);
+  userData.exerciseIndex = 0; // always start at beginning of week
   showExercise();
   updateProgress();
 }
@@ -156,9 +200,9 @@ function checkAnswer(ans){
   }
 }
 
-// --- UPDATE PROGRESS BAR & STATS ---
+// --- UPDATE PROGRESS & STATS ---
 function updateProgress(){
-  progressFill.style.width = ((userData.exerciseIndex+1)/currentExercises.length)*100 + "%";
+  progressFill.style.width = (userData.exerciseIndex / currentExercises.length) * 100 + "%";
 }
 function updateStats(){
   xpDisplay.innerText = `XP: ${userData.xp}`;
@@ -166,7 +210,7 @@ function updateStats(){
   weekDisplay.innerText = `Week: ${userData.week}`;
 }
 
-// --- SAVE PROGRESS ---
+// --- SAVE ---
 function saveProgress(){
   db.collection("users").doc(username).set(userData);
 }
