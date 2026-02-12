@@ -41,16 +41,16 @@
 
 <div id="login" class="section">
   <h2>Select User</h2>
-  <button onclick="login('Asaf')">Asaf</button>
-  <button onclick="login('Brother1')">Brother 1</button>
-  <button onclick="login('Brother2')">Brother 2</button>
+  <button id="loginAsaf">Asaf</button>
+  <button id="loginB1">Brother 1</button>
+  <button id="loginB2">Brother 2</button>
 </div>
 
 <div id="dashboard" class="hidden">
 
   <div class="section">
     <h2 id="welcome"></h2>
-    <button onclick="logout()">Switch User</button>
+    <button id="logoutBtn">Switch User</button>
   </div>
 
   <div class="section">
@@ -62,8 +62,8 @@
     <h2>XP & Progress</h2>
     <p>XP: <span id="xp">0</span></p>
     <p>Homework Streak: <span id="streak">0</span></p>
-    <button onclick="addXP(10)">+10 XP (Complete Exercise)</button>
-    <button onclick="addXP(25)">+25 XP (Finish Lesson)</button>
+    <button id="xp10Btn">+10 XP (Complete Exercise)</button>
+    <button id="xp25Btn">+25 XP (Finish Lesson)</button>
   </div>
 
   <div class="section">
@@ -74,7 +74,7 @@
   <div class="section">
     <h2>Homework</h2>
     <textarea id="homework" rows="6"></textarea>
-    <button onclick="saveHomework()">Submit Homework (+20 XP)</button>
+    <button id="saveHomeworkBtn">Submit Homework (+20 XP)</button>
   </div>
 
   <div class="section">
@@ -86,125 +86,127 @@
 
 <!-- Firebase SDKs -->
 <script type="module">
-  // Import Firebase functions
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
-    authDomain: "german-special-forces.firebaseapp.com",
-    projectId: "german-special-forces",
-    storageBucket: "german-special-forces.firebasestorage.app",
-    messagingSenderId: "440759850329",
-    appId: "1:440759850329:web:33a1f0116e1c32f2132848"
-  };
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
+  authDomain: "german-special-forces.firebaseapp.com",
+  projectId: "german-special-forces",
+  storageBucket: "german-special-forces.firebasestorage.app",
+  messagingSenderId: "440759850329",
+  appId: "1:440759850329:web:33a1f0116e1c32f2132848"
+};
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  let currentUser = null;
-  let users = ["Asaf","Brother1","Brother2"];
+let currentUser = null;
+let users = ["Asaf","Brother1","Brother2"];
 
-  // LOGIN
-  window.login = async function(name){
-    currentUser = name;
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("dashboard").classList.remove("hidden");
-    document.getElementById("welcome").innerText = "Welcome, " + name;
+// FUNCTIONS EXPOSED TO HTML
+window.login = async function(name) {
+  currentUser = name;
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("welcome").innerText = "Welcome, " + name;
 
-    // Initialize user in Firestore if not exists
-    const userRef = doc(db, "users", currentUser);
+  // Initialize user in Firestore if not exists
+  const userRef = doc(db, "users", currentUser);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) {
+    await setDoc(userRef, { xp: 0, streak: 0, homework: "" });
+  }
+
+  loadUser();
+  updateLeaderboard();
+};
+
+window.logout = function() {
+  currentUser = null;
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+};
+
+// LOAD USER DATA
+async function loadUser() {
+  const userRef = doc(db, "users", currentUser);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    document.getElementById("xp").innerText = data.xp || 0;
+    document.getElementById("streak").innerText = data.streak || 0;
+    document.getElementById("homework").value = data.homework || "";
+  }
+}
+
+// SAVE HOMEWORK
+window.saveHomework = async function() {
+  if (!currentUser) return;
+  const homeworkText = document.getElementById("homework").value;
+  const userRef = doc(db, "users", currentUser);
+
+  const userSnap = await getDoc(userRef);
+  let data = userSnap.data();
+  const newStreak = (data.streak || 0) + 1;
+  const newXP = (data.xp || 0) + 20;
+
+  await setDoc(userRef, {
+    xp: newXP,
+    streak: newStreak,
+    homework: homeworkText
+  });
+
+  document.getElementById("xp").innerText = newXP;
+  document.getElementById("streak").innerText = newStreak;
+
+  updateLeaderboard();
+};
+
+// ADD XP MANUALLY
+window.addXP = async function(amount) {
+  if (!currentUser) return;
+  const userRef = doc(db, "users", currentUser);
+  const userSnap = await getDoc(userRef);
+  let data = userSnap.data();
+  const newXP = (data.xp || 0) + amount;
+  await updateDoc(userRef, { xp: newXP });
+  document.getElementById("xp").innerText = newXP;
+
+  updateLeaderboard();
+};
+
+// UPDATE LEADERBOARD
+async function updateLeaderboard() {
+  let ranking = [];
+  for (let u of users) {
+    const userRef = doc(db, "users", u);
     const userSnap = await getDoc(userRef);
-    if(!userSnap.exists()){
-      await setDoc(userRef, {xp:0, streak:0, homework:""});
-    }
-
-    loadUser();
-    updateLeaderboard();
+    let xp = 0;
+    if (userSnap.exists()) xp = userSnap.data().xp || 0;
+    ranking.push({ name: u, xp: xp });
   }
 
-  // LOGOUT
-  window.logout = function(){
-    currentUser = null;
-    document.getElementById("dashboard").classList.add("hidden");
-    document.getElementById("login").classList.remove("hidden");
-  }
+  ranking.sort((a,b)=>b.xp-a.xp);
 
-  // LOAD USER DATA
-  async function loadUser(){
-    const userRef = doc(db, "users", currentUser);
-    const userSnap = await getDoc(userRef);
-    if(userSnap.exists()){
-      const data = userSnap.data();
-      document.getElementById("xp").innerText = data.xp || 0;
-      document.getElementById("streak").innerText = data.streak || 0;
-      document.getElementById("homework").value = data.homework || "";
-    }
-  }
+  let html = "";
+  ranking.forEach((u,i)=>{
+    html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>`;
+  });
 
-  // SAVE HOMEWORK
-  window.saveHomework = async function(){
-    const homeworkText = document.getElementById("homework").value;
-    const userRef = doc(db, "users", currentUser);
+  document.getElementById("leaderboard").innerHTML = html;
+}
 
-    // Get current data
-    const userSnap = await getDoc(userRef);
-    let data = userSnap.data();
-
-    // Update streak & XP
-    const newStreak = (data.streak || 0) + 1;
-    const newXP = (data.xp || 0) + 20;
-
-    await setDoc(userRef, {
-      xp: newXP,
-      streak: newStreak,
-      homework: homeworkText
-    });
-
-    document.getElementById("xp").innerText = newXP;
-    document.getElementById("streak").innerText = newStreak;
-
-    updateLeaderboard();
-  }
-
-  // ADD XP MANUALLY
-  window.addXP = async function(amount){
-    const userRef = doc(db, "users", currentUser);
-    const userSnap = await getDoc(userRef);
-    let data = userSnap.data();
-    const newXP = (data.xp || 0) + amount;
-
-    await updateDoc(userRef, {xp: newXP});
-    document.getElementById("xp").innerText = newXP;
-
-    updateLeaderboard();
-  }
-
-  // UPDATE LEADERBOARD
-  async function updateLeaderboard(){
-    let ranking = [];
-    for(let u of users){
-      const userRef = doc(db, "users", u);
-      const userSnap = await getDoc(userRef);
-      let xp = 0;
-      if(userSnap.exists()){
-        xp = userSnap.data().xp || 0;
-      }
-      ranking.push({name:u, xp: xp});
-    }
-
-    ranking.sort((a,b)=>b.xp - a.xp);
-
-    let html = "";
-    ranking.forEach((u,i)=>{
-      html += `<p>${i+1}. ${u.name} – ${u.xp} XP</p>`;
-    });
-
-    document.getElementById("leaderboard").innerHTML = html;
-  }
-
+// BUTTON EVENT LISTENERS (module-safe)
+document.getElementById("loginAsaf").addEventListener("click",()=>login("Asaf"));
+document.getElementById("loginB1").addEventListener("click",()=>login("Brother1"));
+document.getElementById("loginB2").addEventListener("click",()=>login("Brother2"));
+document.getElementById("logoutBtn").addEventListener("click",()=>logout());
+document.getElementById("saveHomeworkBtn").addEventListener("click",()=>saveHomework());
+document.getElementById("xp10Btn").addEventListener("click",()=>addXP(10));
+document.getElementById("xp25Btn").addEventListener("click",()=>addXP(25));
 </script>
 
 </body>
