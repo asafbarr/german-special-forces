@@ -12,7 +12,7 @@
     h1 { color: #4CAF50; }
     button {
       padding: 10px 20px;
-      margin: 10px 0;
+      margin: 10px 5px 10px 0;
       background: #4CAF50;
       border: none;
       color: white;
@@ -24,7 +24,7 @@
       background: #222;
       border-radius: 8px;
     }
-    input, textarea {
+    textarea {
       width: 100%;
       margin-top: 10px;
       padding: 8px;
@@ -32,48 +32,83 @@
       color: white;
       border: none;
     }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
-<h1>🇩🇪 German Special Forces Training</h1>
+<h1>🇩🇪 German Special Forces</h1>
 
-<div class="section">
-  <h2>Current Level</h2>
-  <p id="level">A1 - Phase 1</p>
+<div id="login" class="section">
+  <h2>Select User</h2>
+  <button onclick="login('Asaf')">Asaf</button>
+  <button onclick="login('Brother1')">Brother 1</button>
+  <button onclick="login('Brother2')">Brother 2</button>
 </div>
 
-<div class="section">
-  <h2>This Week's Lesson</h2>
-  <div id="lesson">
-    <p>Lesson content will go here.</p>
+<div id="dashboard" class="hidden">
+
+  <div class="section">
+    <h2 id="welcome"></h2>
+    <button onclick="logout()">Switch User</button>
   </div>
-</div>
 
-<div class="section">
-  <h2>Homework Submission</h2>
-  <textarea id="homework" rows="6" placeholder="Write your homework here..."></textarea>
-  <button onclick="saveHomework()">Save Homework</button>
-</div>
+  <div class="section">
+    <h2>Current Phase</h2>
+    <p id="phase">Phase 1 – A1 Foundation</p>
+  </div>
 
-<div class="section">
-  <h2>Progress Notes</h2>
-  <div id="notes"></div>
+  <div class="section">
+    <h2>This Week's Lesson</h2>
+    <div id="lesson">
+      <p>Week 1: Present tense + Basic sentence structure.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Homework</h2>
+    <textarea id="homework" rows="6" placeholder="Write your homework here..."></textarea>
+    <button onclick="saveHomework()">Save</button>
+  </div>
+
+  <div class="section">
+    <h2>Status</h2>
+    <p id="status"></p>
+  </div>
+
 </div>
 
 <script>
-function saveHomework() {
-  const text = document.getElementById("homework").value;
-  localStorage.setItem("homework", text);
-  document.getElementById("notes").innerText = "Homework saved locally.";
+let currentUser = null;
+
+function login(name) {
+  currentUser = name;
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("welcome").innerText = "Welcome, " + name;
+  loadHomework();
 }
 
-window.onload = function() {
-  const saved = localStorage.getItem("homework");
+function logout() {
+  currentUser = null;
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+}
+
+function saveHomework() {
+  const text = document.getElementById("homework").value;
+  localStorage.setItem("homework_" + currentUser, text);
+  document.getElementById("status").innerText = "Homework saved.";
+}
+
+function loadHomework() {
+  const saved = localStorage.getItem("homework_" + currentUser);
   if (saved) {
     document.getElementById("homework").value = saved;
+  } else {
+    document.getElementById("homework").value = "";
   }
-};
+}
 </script>
 
 </body>
