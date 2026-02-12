@@ -1,331 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>German Special Forces</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>German Special Forces</title>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      color: #333;
-      overflow-x: hidden;
-      background-image: url('https://image.shutterstock.com/image-vector/deutsch-interpreter-language-online-german-260nw-2204068283.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      position: relative;
-    }
+<style>
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  background-image: url('https://image.shutterstock.com/image-vector/deutsch-interpreter-language-online-german-260nw-2204068283.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
 
-    /* Overlay */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.85);
-      z-index: 0;
-      pointer-events: none;
-    }
+body::before {
+  content: "";
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.88);
+  z-index: 0;
+}
 
-    /* App container */
-    #app {
-      max-width: 900px;
-      margin: 50px auto;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      position: relative;
-      z-index: 1;
-    }
+.container {
+  max-width: 900px;
+  margin: 50px auto;
+  background: rgba(255,255,255,0.95);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 1;
+}
 
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    header h1 {
-      font-family: 'Montserrat', sans-serif;
-      color: #2C3E50;
-      margin: 0;
-    }
-    header p {
-      color: #34495E;
-      margin: 5px 0 0;
-    }
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+}
 
-    /* Login screen */
-    #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    #login-screen input {
-      padding: 10px 15px;
-      margin: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      width: 200px;
-    }
-    #login-screen button {
-      padding: 12px 25px;
-      margin: 10px;
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.2s;
-    }
-    #login-screen button:hover {
-      background: #2980b9;
-    }
+button {
+  padding: 12px 25px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    /* Stats & progress */
-    #stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      font-weight: bold;
-      color: #2C3E50;
-    }
-    .progress-container {
-      width: 100%;
-      background: #bdc3c7;
-      border-radius: 20px;
-      height: 25px;
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #f1c40f, #e67e22);
-      border-radius: 20px;
-      transition: width 0.4s;
-    }
+.primary-btn {
+  background: #3498db;
+  color: white;
+}
 
-    /* Weeks */
-    #weeks {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 25px;
-      justify-content: center;
-    }
-    .week-card {
-      flex: 1 1 120px;
-      background: #3498db;
-      color: white;
-      text-align: center;
-      padding: 15px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform 0.2s, background 0.3s;
-      font-weight: bold;
-      user-select: none;
-    }
-    .week-card:hover {
-      transform: scale(1.05);
-      background: #2980b9;
-    }
+.primary-btn:hover {
+  background: #2980b9;
+}
 
-    /* Exercise card */
-    #exercise {
-      background: #ecf0f1;
-      padding: 25px;
-      border-radius: 15px;
-      margin-bottom: 20px;
-      min-height: 200px;
-    }
+.answer-btn {
+  background: #2ecc71;
+  color: white;
+  margin: 8px;
+}
 
-    /* Buttons */
-    button.answer-btn, button#submit-btn {
-      background: #2ecc71;
-      border: none;
-      color: white;
-      padding: 12px 25px;
-      margin: 10px 5px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.2s;
-    }
-    button.answer-btn:hover, button#submit-btn:hover {
-      background: #27ae60;
-    }
+.answer-btn:hover {
+  background: #27ae60;
+}
 
-    /* Audio */
-    audio {
-      width: 100%;
-      margin-top: 10px;
-      border-radius: 8px;
-      outline: none;
-    }
+.progress-container {
+  background: #ccc;
+  border-radius: 20px;
+  height: 25px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
 
-    @media (max-width: 600px) {
-      #weeks { flex-direction: column; align-items: center; }
-      .week-card { width: 80%; }
-    }
-  </style>
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,#f1c40f,#e67e22);
+  transition: 0.3s;
+}
 
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+.week-card {
+  display: inline-block;
+  background: #3498db;
+  color: white;
+  padding: 12px 20px;
+  margin: 5px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
-      authDomain: "german-special-forces.firebaseapp.com",
-      projectId: "german-special-forces",
-      storageBucket: "german-special-forces.appspot.com",
-      messagingSenderId: "440759850329",
-      appId: "1:440759850329:web:33a1f0116e1c32f2132848"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+.week-card:hover {
+  background: #2980b9;
+}
 
-    // ---- UI ELEMENTS ----
-    const appDiv = document.getElementById('app');
+#dashboard { display: none; }
 
-    const loginScreen = document.createElement('div');
-    loginScreen.id = "login-screen";
-    loginScreen.innerHTML = `
-      <h2>Login / Register</h2>
-      <input type="text" id="username" placeholder="Enter username" />
-      <button id="login-btn">Start Mission</button>
-    `;
-    appDiv.prepend(loginScreen);
-
-    const usernameInput = loginScreen.querySelector('#username');
-    const loginBtn = loginScreen.querySelector('#login-btn');
-
-    let currentUser = null;
-    let userData = { xp:0, streak:0, week:1, exerciseIndex:0 };
-
-    // ---- Week 1 Exercises (50 sample MCQs, can expand) ----
-    const week1Exercises = [
-      { question: "Hallo means?", choices:["Hello","Goodbye","Thanks"], answer: "Hello" },
-      { question: "Danke means?", choices:["Hello","Thank you","Sorry"], answer: "Thank you" },
-      { question: "Tschüss means?", choices:["Hi","Goodbye","Please"], answer: "Goodbye" },
-      // ... add 47 more exercises here
-    ];
-    while(week1Exercises.length<50){
-      week1Exercises.push({ question:"Dummy question", choices:["A","B","C"], answer:"A" });
-    }
-
-    const weeksContainer = document.createElement('div');
-    weeksContainer.id = 'weeks';
-    appDiv.appendChild(weeksContainer);
-
-    const exerciseDiv = document.getElementById('exercise');
-    const submitBtn = document.getElementById('submit-btn');
-    const xpSpan = document.getElementById('xp');
-    const streakSpan = document.getElementById('streak');
-    const progressBar = document.getElementById('progress-bar');
-    const audioPlayer = document.getElementById('audio-player');
-
-    // ---- LOGIN HANDLER ----
-    loginBtn.addEventListener('click', async ()=>{
-      const username = usernameInput.value.trim().toLowerCase();
-      if(!username){ alert("Enter username"); return; }
-      currentUser = username;
-
-      const docRef = doc(db, "users", currentUser);
-      const docSnap = await getDoc(docRef);
-      if(docSnap.exists()){
-        userData = docSnap.data();
-      } else {
-        await setDoc(docRef, userData);
-      }
-
-      loginScreen.style.display = "none";
-      renderWeeks();
-      loadWeek(userData.week);
-    });
-
-    // ---- RENDER WEEKS ----
-    function renderWeeks(){
-      weeksContainer.innerHTML = "";
-      for(let i=1;i<=1;i++){ // only week 1 for now
-        const card = document.createElement('div');
-        card.className = 'week-card';
-        card.textContent = `Week ${i}`;
-        card.addEventListener('click', ()=>{ loadWeek(i); });
-        weeksContainer.appendChild(card);
-      }
-    }
-
-    let currentWeek = 1;
-    let currentExerciseIndex = 0;
-
-    function loadWeek(week){
-      currentWeek = week;
-      if(week===1){
-        renderExercise(week1Exercises[currentExerciseIndex]);
-      }
-      // placeholder audio
-      audioPlayer.src = "https://www.example.com/placeholder.mp3";
-    }
-
-    function renderExercise(ex){
-      exerciseDiv.innerHTML = `<h3>${ex.question}</h3>`;
-      ex.choices.forEach(c=>{
-        const btn = document.createElement('button');
-        btn.textContent = c;
-        btn.className = "answer-btn";
-        btn.onclick = ()=>{ handleAnswer(c, ex.answer); };
-        exerciseDiv.appendChild(btn);
-      });
-      updateProgress();
-    }
-
-    function handleAnswer(choice, correct){
-      if(choice===correct){
-        alert("✅ Correct +10 XP");
-        userData.xp += 10;
-        userData.streak += 1;
-      } else {
-        alert("❌ Wrong, try again!");
-        userData.streak = 0;
-      }
-      currentExerciseIndex++;
-      if(currentExerciseIndex>=week1Exercises.length){
-        alert("🎉 Week Complete!");
-        userData.week++;
-        currentExerciseIndex=0;
-      }
-      userData.exerciseIndex = currentExerciseIndex;
-      saveUserData();
-      if(userData.week===1) renderExercise(week1Exercises[currentExerciseIndex]);
-    }
-
-    async function saveUserData(){
-      const docRef = doc(db, "users", currentUser);
-      await setDoc(docRef, userData);
-      xpSpan.textContent = `XP: ${userData.xp}`;
-      streakSpan.textContent = `Streak: ${userData.streak}`;
-      updateProgress();
-    }
-
-    function updateProgress(){
-      const progress = (currentExerciseIndex / week1Exercises.length)*100;
-      progressBar.style.width = `${progress}%`;
-    }
-  </script>
+#exercise {
+  background: #ecf0f1;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+</style>
 </head>
+
 <body>
-  <div id="app"></div>
+
+<div class="container">
+
+  <!-- LOGIN SCREEN -->
+  <div id="login">
+    <h1>🇩🇪 German Special Forces</h1>
+    <h3>Login / Register</h3>
+    <input id="username" placeholder="Enter username" style="padding:10px;border-radius:8px;border:1px solid #ccc;">
+    <br><br>
+    <button class="primary-btn" id="loginBtn">Start Mission</button>
+  </div>
+
+  <!-- MAIN DASHBOARD -->
+  <div id="dashboard">
+
+    <h1>🇩🇪 German Special Forces</h1>
+
+    <div style="display:flex;justify-content:space-between;">
+      <div id="xp">XP: 0</div>
+      <div id="streak">Streak: 0</div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="weeks"></div>
+
+    <div id="exercise"></div>
+
+    <audio id="audioPlayer" controls style="width:100%;margin-top:15px;"></audio>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "german-special-forces.firebaseapp.com",
+  projectId: "german-special-forces"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let currentUser;
+let userData = { xp:0, streak:0, week:1, exerciseIndex:0 };
+
+const loginBtn = document.getElementById("loginBtn");
+const loginDiv = document.getElementById("login");
+const dashboard = document.getElementById("dashboard");
+
+loginBtn.onclick = async () => {
+  const username = document.getElementById("username").value.trim().toLowerCase();
+  if(!username) return alert("Enter username");
+
+  currentUser = username;
+  const ref = doc(db,"users",currentUser);
+  const snap = await getDoc(ref);
+
+  if(snap.exists()){
+    userData = snap.data();
+  } else {
+    await setDoc(ref,userData);
+  }
+
+  loginDiv.style.display="none";
+  dashboard.style.display="block";
+
+  renderWeeks();
+  loadWeek(userData.week);
+  updateStats();
+};
+
+function renderWeeks(){
+  const weeksDiv = document.getElementById("weeks");
+  weeksDiv.innerHTML="";
+  for(let i=1;i<=1;i++){
+    const btn=document.createElement("div");
+    btn.className="week-card";
+    btn.innerText="Week "+i;
+    btn.onclick=()=>loadWeek(i);
+    weeksDiv.appendChild(btn);
+  }
+}
+
+function updateStats(){
+  document.getElementById("xp").innerText="XP: "+userData.xp;
+  document.getElementById("streak").innerText="Streak: "+userData.streak;
+}
+
+function updateProgress(){
+  const percent=(userData.exerciseIndex/50)*100;
+  document.getElementById("progressBar").style.width=percent+"%";
+}
+
+function loadWeek(week){
+  renderExercise();
+  document.getElementById("audioPlayer").src="YOUR_AUDIO_PLACEHOLDER.mp3";
+}
+
+function renderExercise(){
+  const exDiv=document.getElementById("exercise");
+  exDiv.innerHTML="<h3>Sample Question</h3>";
+
+  ["A","B","C"].forEach(choice=>{
+    const btn=document.createElement("button");
+    btn.className="answer-btn";
+    btn.innerText=choice;
+    btn.onclick=()=>handleAnswer();
+    exDiv.appendChild(btn);
+  });
+
+  updateProgress();
+}
+
+async function handleAnswer(){
+  userData.xp+=10;
+  userData.streak+=1;
+  userData.exerciseIndex+=1;
+  updateStats();
+  updateProgress();
+  await setDoc(doc(db,"users",currentUser),userData);
+  renderExercise();
+}
+
+</script>
+
 </body>
 </html>
