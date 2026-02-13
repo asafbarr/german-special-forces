@@ -111,6 +111,7 @@ userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
 
 document.getElementById("login").style.display="none";
 document.getElementById("dashboard").style.display="block";
+document.getElementById("sidebar").style.display="block"; // 👈 show sidebar after login
 
 renderSidebar();
 updateStats();
