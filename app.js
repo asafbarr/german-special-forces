@@ -7,100 +7,86 @@ const firebaseConfig = {
   projectId:"german-special-forces"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 let currentUser;
 
-let userData = {
+let userData={
   xp:0,
   streak:0,
   currentWeek:1,
   completedWeeks:[],
   exerciseIndex:0,
-  questionOrder:{},
-  mode:"words"
+  questionOrder:[]
 };
 
-/* =====================
-   WEEK STRUCTURE
-===================== */
+/* ===== 50 REAL QUESTIONS ===== */
 
-const weeks = {
+const exercisesWeek1=[
 
-1:{
-  words: generateWeek1Words(),
-  open:[
-    {q:"Say in German: I like books",a:"ich mag bücher"},
-    {q:"Say in German: Good morning my friend",a:"guten morgen mein freund"},
-    {q:"Say in German: Thank you very much",a:"vielen dank"},
-    {q:"Say in German: I am from Germany",a:"ich komme aus deutschland"},
-    {q:"Say in German: I drink water",a:"ich trinke wasser"}
-  ]
-},
+{q:"Hello",a:["Hallo","Tschüss","Danke"],correct:0},
+{q:"Goodbye",a:["Bitte","Tschüss","Ja"],correct:1},
+{q:"Thank you",a:["Danke","Nein","Hallo"],correct:0},
+{q:"Please",a:["Bitte","Danke","Hallo"],correct:0},
+{q:"Yes",a:["Nein","Ja","Bitte"],correct:1},
+{q:"No",a:["Ja","Nein","Hallo"],correct:1},
+{q:"Good morning",a:["Guten Morgen","Gute Nacht","Hallo"],correct:0},
+{q:"Good night",a:["Guten Tag","Gute Nacht","Danke"],correct:1},
+{q:"How are you?",a:["Wie geht's?","Wo bist du?","Was ist das?"],correct:0},
+{q:"I am fine",a:["Ich bin gut","Ich bin traurig","Ich bin müde"],correct:0},
 
-2:{words:[],open:[]},
-3:{words:[],open:[]}
+{q:"One",a:["Eins","Zwei","Drei"],correct:0},
+{q:"Two",a:["Vier","Zwei","Fünf"],correct:1},
+{q:"Three",a:["Drei","Sieben","Neun"],correct:0},
+{q:"Four",a:["Sechs","Vier","Acht"],correct:1},
+{q:"Five",a:["Fünf","Zehn","Elf"],correct:0},
+{q:"Six",a:["Sechs","Zwei","Drei"],correct:0},
+{q:"Seven",a:["Acht","Sieben","Neun"],correct:1},
+{q:"Eight",a:["Sieben","Zehn","Acht"],correct:2},
+{q:"Nine",a:["Neun","Fünf","Vier"],correct:0},
+{q:"Ten",a:["Zehn","Elf","Zwölf"],correct:0},
 
-};
+{q:"I",a:["Du","Ich","Er"],correct:1},
+{q:"You (informal)",a:["Du","Sie","Wir"],correct:0},
+{q:"He",a:["Sie","Er","Es"],correct:1},
+{q:"She",a:["Sie","Er","Ich"],correct:0},
+{q:"We",a:["Ihr","Wir","Du"],correct:1},
+{q:"They",a:["Sie","Wir","Es"],correct:0},
 
-/* =====================
-   GENERATE 50 WORDS
-===================== */
+{q:"House",a:["Auto","Haus","Baum"],correct:1},
+{q:"Car",a:["Auto","Haus","Zug"],correct:0},
+{q:"Book",a:["Stuhl","Buch","Tisch"],correct:1},
+{q:"Table",a:["Tür","Fenster","Tisch"],correct:2},
+{q:"Chair",a:["Stuhl","Lampe","Bett"],correct:0},
 
-function generateWeek1Words(){
+{q:"Water",a:["Milch","Wasser","Saft"],correct:1},
+{q:"Bread",a:["Käse","Brot","Reis"],correct:1},
+{q:"Milk",a:["Milch","Wasser","Tee"],correct:0},
+{q:"Coffee",a:["Kaffee","Saft","Bier"],correct:0},
+{q:"Tea",a:["Kaffee","Tee","Milch"],correct:1},
 
-const base=[
-["Hello","Hallo"],
-["Goodbye","Tschüss"],
-["Thank you","Danke"],
-["Please","Bitte"],
-["Yes","Ja"],
-["No","Nein"],
-["Good morning","Guten Morgen"],
-["Good night","Gute Nacht"],
-["Water","Wasser"],
-["Bread","Brot"],
-["Milk","Milch"],
-["Coffee","Kaffee"],
-["Tea","Tee"],
-["Mother","Mutter"],
-["Father","Vater"],
-["Brother","Bruder"],
-["Sister","Schwester"],
-["Friend","Freund"],
-["School","Schule"],
-["Office","Büro"],
-["City","Stadt"],
-["Country","Land"],
-["Train","Zug"],
-["Today","Heute"],
-["Tomorrow","Morgen"]
+{q:"Mother",a:["Vater","Bruder","Mutter"],correct:2},
+{q:"Father",a:["Vater","Sohn","Onkel"],correct:0},
+{q:"Brother",a:["Schwester","Bruder","Cousin"],correct:1},
+{q:"Sister",a:["Tante","Schwester","Mutter"],correct:1},
+{q:"Friend",a:["Freund","Lehrer","Arzt"],correct:0},
+
+{q:"School",a:["Schule","Büro","Krankenhaus"],correct:0},
+{q:"Office",a:["Park","Büro","Restaurant"],correct:1},
+{q:"City",a:["Dorf","Stadt","Land"],correct:1},
+{q:"Country",a:["Land","Stadt","Haus"],correct:0},
+{q:"Train",a:["Auto","Bus","Zug"],correct:2},
+
+{q:"Today",a:["Heute","Morgen","Gestern"],correct:0},
+{q:"Tomorrow",a:["Heute","Gestern","Morgen"],correct:2},
+{q:"Yesterday",a:["Gestern","Heute","Nacht"],correct:0},
+{q:"Day",a:["Tag","Nacht","Woche"],correct:0},
+{q:"Night",a:["Tag","Abend","Nacht"],correct:2}
+
 ];
 
-let questions=[];
-
-for(let i=0;i<50;i++){
-
-const pair=base[i%base.length];
-const wrong1=base[(i+3)%base.length][1];
-const wrong2=base[(i+6)%base.length][1];
-
-let answers=shuffle([pair[1],wrong1,wrong2]);
-
-questions.push({
-  q:pair[0],
-  a:answers,
-  correct:answers.indexOf(pair[1])
-});
-}
-
-return questions;
-}
-
-/* =====================
-   LOGIN
-===================== */
+/* ===== LOGIN ===== */
 
 document.getElementById("loginBtn").onclick=async()=>{
 
@@ -115,150 +101,107 @@ const snap=await getDoc(ref);
 if(snap.exists()){
 userData=snap.data();
 }else{
+userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
 await setDoc(ref,userData);
 }
 
-if(!userData.questionOrder[userData.currentWeek]){
-userData.questionOrder[userData.currentWeek]=
-shuffle([...Array(weeks[userData.currentWeek].words.length).keys()]);
+if(!userData.questionOrder || userData.questionOrder.length===0){
+userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
 }
 
 document.getElementById("login").style.display="none";
 document.getElementById("dashboard").style.display="block";
-document.getElementById("sidebar").style.display="block";
+document.getElementById("sidebar").style.display="block"; // 👈 show sidebar after login
+
 
 renderSidebar();
 updateStats();
-renderContent();
+renderExercise();
 };
 
-/* =====================
-   SHUFFLE
-===================== */
+/* ===== SHUFFLE ===== */
 
-function shuffle(arr){
-for(let i=arr.length-1;i>0;i--){
+function shuffle(array){
+for(let i=array.length-1;i>0;i--){
 const j=Math.floor(Math.random()*(i+1));
-[arr[i],arr[j]]=[arr[j],arr[i]];
+[array[i],array[j]]=[array[j],array[i]];
 }
-return arr;
+return array;
 }
 
-/* =====================
-   SIDEBAR
-===================== */
+/* ===== SIDEBAR ===== */
 
 function renderSidebar(){
-
 const sidebar=document.getElementById("sidebar");
 sidebar.innerHTML="";
 
 for(let i=1;i<=3;i++){
 
-const weekTab=document.createElement("div");
-weekTab.className="week-tab";
-weekTab.innerText="Week "+i;
-
-if(i===userData.currentWeek)
-weekTab.classList.add("week-active");
-
-weekTab.onclick=()=>selectWeek(i);
-
-sidebar.appendChild(weekTab);
+const tab=document.createElement("div");
+tab.className="week-tab";
+tab.innerText="Week "+i;
 
 if(i===userData.currentWeek){
-
-["Words","Open Questions"].forEach(mode=>{
-const sub=document.createElement("div");
-sub.style.marginLeft="10px";
-sub.style.padding="6px";
-sub.style.cursor="pointer";
-sub.innerText=mode;
-sub.onclick=()=>switchMode(mode.toLowerCase());
-sidebar.appendChild(sub);
-});
+tab.classList.add("week-active");
 }
+if(userData.completedWeeks.includes(i)){
+tab.classList.add("week-completed");
+}
+
+sidebar.appendChild(tab);
 }
 }
 
-/* =====================
-   SELECT WEEK
-===================== */
-
-function selectWeek(week){
-userData.currentWeek=week;
-userData.exerciseIndex=0;
-renderSidebar();
-renderContent();
-}
-
-/* =====================
-   SWITCH MODE
-===================== */
-
-function switchMode(mode){
-userData.mode=mode;
-userData.exerciseIndex=0;
-renderContent(); // 🔥 force render
-}
-
-/* =====================
-   STATS
-===================== */
+/* ===== STATS ===== */
 
 function updateStats(){
 document.getElementById("xp").innerText="XP: "+userData.xp;
 document.getElementById("streak").innerText="Streak: "+userData.streak;
 document.getElementById("weekDisplay").innerText="Week "+userData.currentWeek;
+
+const percent=(userData.exerciseIndex/exercisesWeek1.length)*100;
+document.getElementById("progressBar").style.width=percent+"%";
 }
 
-/* =====================
-   RENDER CONTENT
-===================== */
+/* ===== EXERCISE ===== */
 
-function renderContent(){
-
-if(userData.mode==="words") renderWords();
-if(userData.mode==="open questions") renderOpen();
-}
-
-/* =====================
-   WORD MODE
-===================== */
-
-function renderWords(){
+function renderExercise(){
 
 const exDiv=document.getElementById("exercise");
 const feedback=document.getElementById("feedback");
 feedback.innerText="";
 feedback.className="feedback";
 
-const week=weeks[userData.currentWeek];
-if(!week.words.length){
-exDiv.innerHTML="<h3>No content yet.</h3>";
+if(userData.exerciseIndex>=exercisesWeek1.length){
+
+exDiv.innerHTML="<h2>🎉 Week Completed!</h2>";
+
+if(!userData.completedWeeks.includes(1)){
+userData.completedWeeks.push(1);
+setDoc(doc(db,"users",currentUser),userData);
+renderSidebar();
+}
+
 return;
 }
 
-const order=userData.questionOrder[userData.currentWeek];
-const index=order[userData.exerciseIndex];
-const current=week.words[index];
+const questionIndex=userData.questionOrder[userData.exerciseIndex];
+const current=exercisesWeek1[questionIndex];
 
 exDiv.innerHTML="<h3>"+current.q+"</h3>";
 
-current.a.forEach((answer,i)=>{
+current.a.forEach((answer,index)=>{
 const btn=document.createElement("button");
 btn.className="answer-btn";
 btn.innerText=answer;
-btn.onclick=()=>checkWordAnswer(i,current.correct);
+btn.onclick=()=>checkAnswer(index,current.correct);
 exDiv.appendChild(btn);
 });
 }
 
-/* =====================
-   CHECK WORD ANSWER
-===================== */
+/* ===== CHECK ANSWER ===== */
 
-async function checkWordAnswer(selected,correct){
+async function checkAnswer(selected,correct){
 
 const feedback=document.getElementById("feedback");
 
@@ -268,13 +211,14 @@ feedback.innerText="✅ Correct!";
 feedback.classList.add("correct");
 
 userData.xp+=10;
-userData.streak++;
+userData.streak+=1;
 userData.exerciseIndex++;
 
 await setDoc(doc(db,"users",currentUser),userData);
+
 updateStats();
 
-setTimeout(()=>renderWords(),700);
+setTimeout(()=>renderExercise(),800);
 
 }else{
 
@@ -284,56 +228,4 @@ feedback.classList.add("wrong");
 userData.streak=0;
 updateStats();
 }
-}
-
-/* =====================
-   OPEN MODE
-===================== */
-
-function renderOpen(){
-
-const exDiv=document.getElementById("exercise");
-const feedback=document.getElementById("feedback");
-feedback.innerText="";
-feedback.className="feedback";
-
-const week=weeks[userData.currentWeek];
-if(!week.open.length){
-exDiv.innerHTML="<h3>No open questions yet.</h3>";
-return;
-}
-
-const random=week.open[Math.floor(Math.random()*week.open.length)];
-
-exDiv.innerHTML=`
-<h3>${random.q}</h3>
-<input id="openAnswer" style="width:100%;padding:10px;">
-<br><br>
-<button class="primary-btn" id="checkOpen">Check</button>
-`;
-
-document.getElementById("checkOpen").onclick=()=>{
-
-const userInput=document.getElementById("openAnswer").value.trim().toLowerCase();
-
-if(userInput===random.a){
-
-feedback.innerText="✅ Correct! +15 XP";
-feedback.classList.add("correct");
-
-userData.xp+=15;
-userData.streak++;
-
-setDoc(doc(db,"users",currentUser),userData);
-updateStats();
-
-}else{
-
-feedback.innerText="❌ Wrong. Correct answer: "+random.a;
-feedback.classList.add("wrong");
-
-userData.streak=0;
-updateStats();
-}
-};
 }
