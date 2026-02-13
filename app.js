@@ -18,72 +18,138 @@ let userData = {
   currentWeek:1,
   completedWeeks:[],
   exerciseIndex:0,
-  questionOrder:[],
+  questionOrder:{}, // 👈 now stored per week
   mode:"words"
 };
 
-/* =======================
-   WEEK 1 WORD QUESTIONS
-======================= */
+/* =========================
+   WEEK CONTENT STRUCTURE
+========================= */
 
-const exercisesWeek1 = [
-{q:"Hello",a:["Hallo","Tschüss","Danke"],correct:0},
-{q:"Goodbye",a:["Bitte","Tschüss","Ja"],correct:1},
-{q:"Thank you",a:["Danke","Nein","Hallo"],correct:0},
-{q:"Please",a:["Bitte","Danke","Hallo"],correct:0},
-{q:"Yes",a:["Nein","Ja","Bitte"],correct:1},
-{q:"No",a:["Ja","Nein","Hallo"],correct:1},
-{q:"Good morning",a:["Guten Morgen","Gute Nacht","Hallo"],correct:0},
-{q:"Good night",a:["Guten Tag","Gute Nacht","Danke"],correct:1},
-{q:"How are you?",a:["Wie geht's?","Wo bist du?","Was ist das?"],correct:0},
-{q:"I am fine",a:["Ich bin gut","Ich bin traurig","Ich bin müde"],correct:0}
-];
+const weeks = {
 
-/* =======================
-   OPEN QUESTIONS
-======================= */
+1: {
+  words: generateWeek1Words(),
+  open: [
+    "Write a short greeting dialogue.",
+    "Introduce yourself in 3 German sentences.",
+    "Write a goodbye conversation.",
+    "Write a sentence using Guten Morgen.",
+    "Write a sentence using Danke and Bitte."
+  ],
+  audio: ["","",""]
+},
 
-const openQuestionsWeek1 = [
-"Write a short greeting conversation in German.",
-"Write 3 sentences introducing yourself in German.",
-"Create a short dialogue between two friends meeting.",
-"Write a sentence using Guten Morgen.",
-"Write a sentence using Danke and Bitte."
-];
+2: {
+  words: [],   // ready for future content
+  open: [],
+  audio: ["","",""]
+},
 
-/* =======================
-   LOGIN
-======================= */
+3: {
+  words: [],
+  open: [],
+  audio: ["","",""]
+}
 
-document.getElementById("loginBtn").onclick = async () => {
-
-  const username = document.getElementById("username").value.trim().toLowerCase();
-  if(!username) return alert("Enter username");
-
-  currentUser = username;
-
-  const ref = doc(db,"users",currentUser);
-  const snap = await getDoc(ref);
-
-  if(snap.exists()){
-    userData = snap.data();
-  } else {
-    userData.questionOrder = shuffle([...Array(exercisesWeek1.length).keys()]);
-    await setDoc(ref,userData);
-  }
-
-  document.getElementById("login").style.display="none";
-  document.getElementById("dashboard").style.display="block";
-  document.getElementById("sidebar").style.display="block";
-
-  renderSidebar();
-  updateStats();
-  renderExercise();
 };
 
-/* =======================
+/* =========================
+   GENERATE 50 QUESTIONS
+========================= */
+
+function generateWeek1Words(){
+
+const base = [
+["Hello","Hallo"],
+["Goodbye","Tschüss"],
+["Thank you","Danke"],
+["Please","Bitte"],
+["Yes","Ja"],
+["No","Nein"],
+["Good morning","Guten Morgen"],
+["Good night","Gute Nacht"],
+["Water","Wasser"],
+["Bread","Brot"],
+["Milk","Milch"],
+["Coffee","Kaffee"],
+["Tea","Tee"],
+["Mother","Mutter"],
+["Father","Vater"],
+["Brother","Bruder"],
+["Sister","Schwester"],
+["Friend","Freund"],
+["School","Schule"],
+["Office","Büro"],
+["City","Stadt"],
+["Country","Land"],
+["Train","Zug"],
+["Today","Heute"],
+["Tomorrow","Morgen"],
+["Yesterday","Gestern"]
+];
+
+let questions=[];
+
+for(let i=0;i<50;i++){
+
+const pair = base[i % base.length];
+
+const wrong1 = base[(i+3)%base.length][1];
+const wrong2 = base[(i+5)%base.length][1];
+
+questions.push({
+  q: pair[0],
+  a: shuffle([pair[1],wrong1,wrong2]),
+  correct: null
+});
+
+}
+
+questions.forEach(q=>{
+q.correct = q.a.indexOf(base.find(p=>p[0]===q.q)[1]);
+});
+
+return questions;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+document.getElementById("loginBtn").onclick = async ()=>{
+
+const username=document.getElementById("username").value.trim().toLowerCase();
+if(!username) return alert("Enter username");
+
+currentUser=username;
+
+const ref=doc(db,"users",currentUser);
+const snap=await getDoc(ref);
+
+if(snap.exists()){
+userData=snap.data();
+}else{
+await setDoc(ref,userData);
+}
+
+if(!userData.questionOrder[userData.currentWeek]){
+userData.questionOrder[userData.currentWeek] =
+shuffle([...Array(weeks[userData.currentWeek].words.length).keys()]);
+}
+
+document.getElementById("login").style.display="none";
+document.getElementById("dashboard").style.display="block";
+document.getElementById("sidebar").style.display="block";
+
+renderSidebar();
+updateStats();
+renderContent();
+};
+
+/* =========================
    SHUFFLE
-======================= */
+========================= */
 
 function shuffle(array){
 for(let i=array.length-1;i>0;i--){
@@ -93,77 +159,70 @@ const j=Math.floor(Math.random()*(i+1));
 return array;
 }
 
-/* =======================
-   SIDEBAR WITH FOLDERS
-======================= */
+/* =========================
+   SIDEBAR
+========================= */
 
 function renderSidebar(){
+
 const sidebar=document.getElementById("sidebar");
 sidebar.innerHTML="";
 
 for(let i=1;i<=3;i++){
 
-const week=document.createElement("div");
-week.className="week-tab";
-week.innerText="Week "+i;
+const weekTab=document.createElement("div");
+weekTab.className="week-tab";
+weekTab.innerText="Week "+i;
+
+if(i===userData.currentWeek)
+weekTab.classList.add("week-active");
+
+if(userData.completedWeeks.includes(i))
+weekTab.classList.add("week-completed");
+
+weekTab.onclick=()=>selectWeek(i);
+
+sidebar.appendChild(weekTab);
 
 if(i===userData.currentWeek){
-week.classList.add("week-active");
-}
 
-if(userData.completedWeeks.includes(i)){
-week.classList.add("week-completed");
-}
-
-week.onclick=()=>toggleWeekMenu(i);
-
-sidebar.appendChild(week);
-
-/* Sub menu */
-if(i===userData.currentWeek){
-
-const subMenu=document.createElement("div");
-subMenu.style.marginLeft="10px";
-
-["Words","Open Questions","Audio"].forEach(option=>{
-
+["Words","Open Questions","Audio"].forEach(mode=>{
 const sub=document.createElement("div");
-sub.style.padding="8px";
+sub.style.marginLeft="10px";
+sub.style.padding="6px";
 sub.style.cursor="pointer";
-sub.innerText=option;
-
-sub.onclick=()=>switchMode(option.toLowerCase());
-
-subMenu.appendChild(sub);
-
+sub.innerText=mode;
+sub.onclick=()=>switchMode(mode.toLowerCase());
+sidebar.appendChild(sub);
 });
-
-sidebar.appendChild(subMenu);
 }
 }
 }
 
-/* =======================
-   SWITCH MODE
-======================= */
+/* =========================
+   WEEK SELECT
+========================= */
+
+function selectWeek(week){
+userData.currentWeek=week;
+userData.exerciseIndex=0;
+renderSidebar();
+renderContent();
+}
+
+/* =========================
+   MODE SWITCH
+========================= */
 
 function switchMode(mode){
-
 userData.mode=mode;
 userData.exerciseIndex=0;
-
-if(mode==="words"){
-if(!userData.questionOrder || userData.questionOrder.length===0){
-userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
-}
+renderContent();
 }
 
-renderExercise();
-}
-
-/* =======================
+/* =========================
    STATS
-======================= */
+========================= */
 
 function updateStats(){
 document.getElementById("xp").innerText="XP: "+userData.xp;
@@ -171,43 +230,42 @@ document.getElementById("streak").innerText="Streak: "+userData.streak;
 document.getElementById("weekDisplay").innerText="Week "+userData.currentWeek;
 }
 
-/* =======================
+/* =========================
    RENDER CONTENT
-======================= */
+========================= */
 
-function renderExercise(){
+function renderContent(){
+
+if(userData.mode==="words") renderWords();
+if(userData.mode==="open questions") renderOpen();
+if(userData.mode==="audio") renderAudio();
+}
+
+/* =========================
+   WORD MODE
+========================= */
+
+function renderWords(){
 
 const exDiv=document.getElementById("exercise");
 const feedback=document.getElementById("feedback");
 feedback.innerText="";
 feedback.className="feedback";
 
-if(userData.mode==="words"){
-renderWordExercise();
-}
-else if(userData.mode==="open questions"){
-renderOpenQuestion();
-}
-else if(userData.mode==="audio"){
-renderAudioSection();
-}
-}
-
-/* =======================
-   WORD MODE
-======================= */
-
-function renderWordExercise(){
-
-const exDiv=document.getElementById("exercise");
-
-if(userData.exerciseIndex>=exercisesWeek1.length){
-exDiv.innerHTML="<h2>🎉 Words Completed!</h2>";
+const week=weeks[userData.currentWeek];
+if(!week.words.length){
+exDiv.innerHTML="<h3>No content yet.</h3>";
 return;
 }
 
-const index=userData.questionOrder[userData.exerciseIndex];
-const current=exercisesWeek1[index];
+if(userData.exerciseIndex>=week.words.length){
+exDiv.innerHTML="<h2>🎉 Completed!</h2>";
+return;
+}
+
+const order=userData.questionOrder[userData.currentWeek];
+const index=order[userData.exerciseIndex];
+const current=week.words[index];
 
 exDiv.innerHTML="<h3>"+current.q+"</h3>";
 
@@ -220,57 +278,41 @@ exDiv.appendChild(btn);
 });
 }
 
-/* =======================
-   OPEN QUESTIONS MODE
-======================= */
+/* =========================
+   OPEN MODE
+========================= */
 
-function renderOpenQuestion(){
+function renderOpen(){
 
 const exDiv=document.getElementById("exercise");
+const week=weeks[userData.currentWeek];
 
-const random=openQuestionsWeek1[Math.floor(Math.random()*openQuestionsWeek1.length)];
+if(!week.open.length){
+exDiv.innerHTML="<h3>No open questions yet.</h3>";
+return;
+}
+
+const random=week.open[Math.floor(Math.random()*week.open.length)];
 
 exDiv.innerHTML=`
 <h3>${random}</h3>
-<textarea style="width:100%;height:120px;margin-top:15px;"></textarea>
-<br><br>
-<button class="primary-btn">Submit</button>
+<textarea style="width:100%;height:120px;"></textarea>
 `;
-
 }
 
-/* =======================
+/* =========================
    AUDIO MODE
-======================= */
+========================= */
 
-function renderAudioSection(){
+function renderAudio(){
 
 const exDiv=document.getElementById("exercise");
-
-exDiv.innerHTML=`
-<h3>Audio Lessons</h3>
-
-<p>Audio 1</p>
-<audio controls>
-<source src="" type="audio/mpeg">
-</audio>
-
-<p>Audio 2</p>
-<audio controls>
-<source src="" type="audio/mpeg">
-</audio>
-
-<p>Audio 3</p>
-<audio controls>
-<source src="" type="audio/mpeg">
-</audio>
-`;
-
+exDiv.innerHTML="<h3>Audio coming soon...</h3>";
 }
 
-/* =======================
+/* =========================
    CHECK ANSWER
-======================= */
+========================= */
 
 async function checkAnswer(selected,correct){
 
@@ -288,8 +330,7 @@ userData.exerciseIndex++;
 await setDoc(doc(db,"users",currentUser),userData);
 
 updateStats();
-
-setTimeout(()=>renderExercise(),800);
+setTimeout(()=>renderContent(),800);
 
 }else{
 
@@ -299,14 +340,4 @@ feedback.classList.add("wrong");
 userData.streak=0;
 updateStats();
 }
-}
-
-/* =======================
-   TOGGLE WEEK MENU
-======================= */
-
-function toggleWeekMenu(week){
-userData.currentWeek=week;
-renderSidebar();
-renderExercise();
 }
