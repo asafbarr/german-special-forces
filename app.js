@@ -17,7 +17,8 @@ let currentUser;
 let userData = {
   xp: 0,
   streak: 0,
-  progress: {} 
+  progress: {},
+  shuffledIndices: {} // To keep the random order consistent during a session
 };
 
 let currentWeek = 1;
@@ -79,17 +80,73 @@ const courseData = {
       {q:"Night",a:["Tag","Abend","Nacht"],correct:2}
     ],
     open: [
-      {q:"Say in German: I like books", a: "Ich mag Bücher"},
-      {q:"Say in German: The car is good", a: "Das Auto ist gut"},
-      {q:"Say in German: Good morning, Father", a: "Guten Morgen, Vater"},
-      {q:"Say in German: I have a house", a: "Ich habe ein Haus"},
-      {q:"Say in German: How are you, friend?", a: "Wie geht's, Freund?"}
+      {q:"Translate: I am a brother", a:"Ich bin ein Bruder"},
+      {q:"Translate: You are a friend", a:"Du bist ein Freund"},
+      {q:"Translate: He has a car", a:"Er hat ein Auto"},
+      {q:"Translate: She has a book", a:"Sie hat ein Buch"},
+      {q:"Translate: We have bread", a:"Wir haben Brot"},
+      {q:"Translate: They have water", a:"Sie haben Wasser"},
+      {q:"Translate: Good morning, Mother", a:"Guten Morgen, Mutter"},
+      {q:"Translate: Good night, Father", a:"Gute Nacht, Vater"},
+      {q:"Translate: I am fine, thank you", a:"Ich bin gut, danke"},
+      {q:"Translate: Today is a day", a:"Heute ist ein Tag"},
+      {q:"Translate: Tomorrow is Monday (Montag)", a:"Morgen ist Montag"},
+      {q:"Translate: The house is big (groß)", a:"Das Haus ist groß"},
+      {q:"Translate: The car is fast (schnell)", a:"Das Auto ist schnell"},
+      {q:"Translate: I drink water", a:"Ich trinke Wasser"},
+      {q:"Translate: You drink milk", a:"Du trinkst Milch"},
+      {q:"Translate: He drinks coffee", a:"Er trinkt Kaffee"},
+      {q:"Translate: She drinks tea", a:"Sie trinkt Tee"},
+      {q:"Translate: We eat bread", a:"Wir essen Brot"},
+      {q:"Translate: The book is on the table", a:"Das Buch ist auf dem Tisch"},
+      {q:"Translate: The chair is in the house", a:"Der Stuhl ist im Haus"},
+      {q:"Translate: One, two, three, four", a:"Eins, zwei, drei, vier"},
+      {q:"Translate: Five, six, seven, eight", a:"Fünf, sechs, sieben, acht"},
+      {q:"Translate: Nine and ten", a:"Neun und zehn"},
+      {q:"Translate: I have a sister", a:"Ich habe eine Schwester"},
+      {q:"Translate: He is a teacher (Lehrer)", a:"Er ist ein Lehrer"},
+      {q:"Translate: The city is beautiful (schön)", a:"Die Stadt ist schön"},
+      {q:"Translate: The country is large (groß)", a:"Das Land ist groß"},
+      {q:"Translate: The train is coming (kommt)", a:"Der Zug kommt"},
+      {q:"Translate: Today I learn German", a:"Heute lerne ich Deutsch"},
+      {q:"Translate: I am at school", a:"Ich bin in der Schule"},
+      {q:"Translate: You are at the office", a:"Du bist im Büro"},
+      {q:"Translate: The water is cold (kalt)", a:"Das Wasser ist kalt"},
+      {q:"Translate: The bread is fresh (frisch)", a:"Das Brot ist frisch"},
+      {q:"Translate: The milk is white (weiß)", a:"Die Milch ist weiß"},
+      {q:"Translate: Coffee or tea?", a:"Kaffee oder Tee?"},
+      {q:"Translate: Yes, please", a:"Ja, bitte"},
+      {q:"Translate: No, thank you", a:"Nein, danke"},
+      {q:"Translate: Goodbye, my friend", a:"Tschüss, mein Freund"},
+      {q:"Translate: Where is the house?", a:"Wo ist das Haus?"},
+      {q:"Translate: Where is the car?", a:"Wo ist das Auto?"},
+      {q:"Translate: I have a table and a chair", a:"Ich habe einen Tisch und einen Stuhl"},
+      {q:"Translate: The mother loves the father", a:"Die Mutter liebt den Vater"},
+      {q:"Translate: The father loves the mother", a:"Der Vater liebt die Mutter"},
+      {q:"Translate: I am here (hier) today", a:"Ich bin heute hier"},
+      {q:"Translate: You were there (da) yesterday", a:"Du warst gestern da"},
+      {q:"Translate: The night is dark (dunkel)", a:"Die Nacht ist dunkel"},
+      {q:"Translate: The day is bright (hell)", a:"Der Tag ist hell"},
+      {q:"Translate: I have three books", a:"Ich habe drei Bücher"},
+      {q:"Translate: We have two cars", a:"Wir haben zwei Autos"},
+      {q:"Translate: Hello, how are you?", a:"Hallo, wie geht es dir?"}
     ],
     audio: [
       {q:"Watch the first 30 seconds. What is the first greeting?", link: "https://www.youtube.com/watch?v=4-eDoThe6qo", a: "Hallo"}
     ]
   }
 };
+
+/* ===== HELPER: SHUFFLE ARRAY ===== */
+function shuffle(array) {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
 
 document.getElementById("loginBtn").onclick = async () => {
   const username = document.getElementById("username").value.trim().toLowerCase();
@@ -124,7 +181,6 @@ function renderSidebar() {
       link.innerText = type;
       link.onclick = (e) => {
         e.stopPropagation();
-        // UI Fix: Highlight tab and link
         document.querySelectorAll(".week-tab").forEach(t => t.classList.remove("week-active"));
         tab.classList.add("week-active");
         loadModule(i, type);
@@ -133,12 +189,9 @@ function renderSidebar() {
     });
 
     tab.onclick = () => {
-      // Logic for accordion
       const isVisible = panel.style.display === "block";
       document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
       panel.style.display = isVisible ? "none" : "block";
-      
-      // Highlight the tab immediately on click
       document.querySelectorAll(".week-tab").forEach(t => t.classList.remove("week-active"));
       tab.classList.add("week-active");
     };
@@ -151,13 +204,19 @@ function renderSidebar() {
 function loadModule(week, type) {
   currentWeek = week;
   currentModule = type.toLowerCase().replace(" ", "");
-  
-  // Ensure progress exists for this module
   const key = `week${currentWeek}_${currentModule}`;
+  
   if(userData.progress[key] === undefined) {
     userData.progress[key] = 0;
   }
-  
+
+  // Generate a random order for this module if it doesn't exist
+  if (!userData.shuffledIndices[key]) {
+      const questions = courseData[`week${currentWeek}`][currentModule];
+      let indices = Array.from(Array(questions.length).keys()); // [0, 1, 2...]
+      userData.shuffledIndices[key] = shuffle(indices);
+  }
+
   document.getElementById("modDisplay").innerText = `W${currentWeek}: ${type.toUpperCase()}`;
   renderExercise();
 }
@@ -173,15 +232,18 @@ function renderExercise() {
       return;
   }
   
-  const index = userData.progress[`week${currentWeek}_${currentModule}`] || 0;
+  const progressKey = `week${currentWeek}_${currentModule}`;
+  const currentIndexInShuffle = userData.progress[progressKey] || 0;
 
-  if (index >= questions.length) {
+  if (currentIndexInShuffle >= questions.length) {
     exDiv.innerHTML = "<h2>🎉 Module Completed!</h2>";
-    updateStats(); // Update one last time to show 100%
+    updateStats();
     return;
   }
 
-  const current = questions[index];
+  // Get the question using the shuffled index
+  const questionIndex = userData.shuffledIndices[progressKey][currentIndexInShuffle];
+  const current = questions[questionIndex];
 
   if(currentModule === "words") {
     exDiv.innerHTML = "<h3>" + current.q + "</h3>";
@@ -198,7 +260,6 @@ function renderExercise() {
       <input id="openAns" placeholder="Type in German..." style="width: 80%;"><br>
       <button class="primary-btn" id="submitOpenBtn">Submit Answer</button>`;
       
-    // Fix: Using direct listener for the dynamic button
     document.getElementById("submitOpenBtn").addEventListener("click", () => {
         const val = document.getElementById("openAns").value.trim();
         checkAnswer(val, current.a);
@@ -209,23 +270,24 @@ function renderExercise() {
 
 async function checkAnswer(val, correct) {
   const feedback = document.getElementById("feedback");
-  const isCorrect = (val === correct || (typeof val === 'string' && val.toLowerCase() === correct.toLowerCase()));
+  // Basic normalization for open questions
+  const isCorrect = (val === correct || (typeof val === 'string' && val.toLowerCase().replace(/[.,!?]/g, "") === correct.toLowerCase().replace(/[.,!?]/g, "")));
 
   if(isCorrect) {
     feedback.innerText = "✅ Korrekt!";
     feedback.className = "feedback correct";
     userData.xp += 10;
     userData.streak += 1;
-    
-    // Increment and Save
     const key = `week${currentWeek}_${currentModule}`;
     userData.progress[key]++;
-    
     await setDoc(doc(db, "users", currentUser), userData);
     updateStats();
     setTimeout(() => renderExercise(), 800);
   } else {
-    const displayCorrect = (typeof correct === 'number') ? courseData[`week${currentWeek}`][currentModule][userData.progress[`week${currentWeek}_${currentModule}`]].a[correct] : correct;
+    const progressKey = `week${currentWeek}_${currentModule}`;
+    const questionIndex = userData.shuffledIndices[progressKey][userData.progress[progressKey]];
+    const displayCorrect = (typeof correct === 'number') ? courseData[`week${currentWeek}`][currentModule][questionIndex].a[correct] : correct;
+    
     feedback.innerText = `❌ Wrong. The answer is: "${displayCorrect}". Try again!`;
     feedback.className = "feedback wrong";
     userData.streak = 0;
@@ -236,13 +298,11 @@ async function checkAnswer(val, correct) {
 function updateStats() {
   document.getElementById("xp").innerText = "XP: " + userData.xp;
   document.getElementById("streak").innerText = "Streak: " + userData.streak;
-  
   const questions = courseData[`week${currentWeek}`]?.[currentModule];
   if(questions) {
-    const index = userData.progress[`week${currentWeek}_${currentModule}`] || 0;
+    const key = `week${currentWeek}_${currentModule}`;
+    const index = userData.progress[key] || 0;
     const percent = (index / questions.length) * 100;
     document.getElementById("progressBar").style.width = percent + "%";
-  } else {
-    document.getElementById("progressBar").style.width = "0%";
   }
 }
