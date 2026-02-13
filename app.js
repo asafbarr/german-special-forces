@@ -18,7 +18,7 @@ let userData = {
   xp: 0,
   streak: 0,
   progress: {},
-  shuffledIndices: {} // To keep the random order consistent during a session
+  shuffledIndices: {}
 };
 
 let currentWeek = 1;
@@ -137,7 +137,6 @@ const courseData = {
   }
 };
 
-/* ===== HELPER: SHUFFLE ARRAY ===== */
 function shuffle(array) {
   let currentIndex = array.length, randomIndex;
   while (currentIndex != 0) {
@@ -206,14 +205,12 @@ function loadModule(week, type) {
   currentModule = type.toLowerCase().replace(" ", "");
   const key = `week${currentWeek}_${currentModule}`;
   
-  if(userData.progress[key] === undefined) {
-    userData.progress[key] = 0;
-  }
-
-  // Generate a random order for this module if it doesn't exist
-  if (!userData.shuffledIndices[key]) {
+  if(userData.progress[key] === undefined) userData.progress[key] = 0;
+  
+  // Ensure shuffle exists before rendering
+  if (!userData.shuffledIndices[key] || userData.shuffledIndices[key].length === 0) {
       const questions = courseData[`week${currentWeek}`][currentModule];
-      let indices = Array.from(Array(questions.length).keys()); // [0, 1, 2...]
+      let indices = Array.from(Array(questions.length).keys());
       userData.shuffledIndices[key] = shuffle(indices);
   }
 
@@ -233,20 +230,19 @@ function renderExercise() {
   }
   
   const progressKey = `week${currentWeek}_${currentModule}`;
-  const currentIndexInShuffle = userData.progress[progressKey] || 0;
+  const currentIndex = userData.progress[progressKey] || 0;
 
-  if (currentIndexInShuffle >= questions.length) {
+  if (currentIndex >= questions.length) {
     exDiv.innerHTML = "<h2>🎉 Module Completed!</h2>";
     updateStats();
     return;
   }
 
-  // Get the question using the shuffled index
-  const questionIndex = userData.shuffledIndices[progressKey][currentIndexInShuffle];
+  const questionIndex = userData.shuffledIndices[progressKey][currentIndex];
   const current = questions[questionIndex];
 
   if(currentModule === "words") {
-    exDiv.innerHTML = "<h3>" + current.q + "</h3>";
+    exDiv.innerHTML = `<h3>${current.q}</h3>`;
     current.a.forEach((ans, i) => {
       const btn = document.createElement("button");
       btn.className = "answer-btn";
@@ -256,21 +252,29 @@ function renderExercise() {
     });
   } else {
     const link = current.link ? `<br><a href="${current.link}" target="_blank" style="color:#3498db; font-weight:bold;">[CLICK TO VIEW ASSET]</a><br>` : "";
-    exDiv.innerHTML = `<h3>${current.q}</h3>${link}<br>
-      <input id="openAns" placeholder="Type in German..." style="width: 80%;"><br>
-      <button class="primary-btn" id="submitOpenBtn">Submit Answer</button>`;
-      
-    document.getElementById("submitOpenBtn").addEventListener("click", () => {
-        const val = document.getElementById("openAns").value.trim();
-        checkAnswer(val, current.a);
-    });
+    exDiv.innerHTML = `
+      <h3>${current.q}</h3>
+      ${link}
+      <br>
+      <input id="openAns" placeholder="Type in German..." style="width: 80%;">
+      <br>
+      <button class="primary-btn" id="submitOpenBtn">Submit Answer</button>
+    `;
+    
+    // Explicitly check for button existence before adding listener
+    const btn = document.getElementById("submitOpenBtn");
+    if(btn) {
+        btn.onclick = () => {
+            const val = document.getElementById("openAns").value.trim();
+            checkAnswer(val, current.a);
+        };
+    }
   }
   updateStats();
 }
 
 async function checkAnswer(val, correct) {
   const feedback = document.getElementById("feedback");
-  // Basic normalization for open questions
   const isCorrect = (val === correct || (typeof val === 'string' && val.toLowerCase().replace(/[.,!?]/g, "") === correct.toLowerCase().replace(/[.,!?]/g, "")));
 
   if(isCorrect) {
