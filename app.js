@@ -191,8 +191,6 @@ function renderSidebar() {
       const isVisible = panel.style.display === "block";
       document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
       panel.style.display = isVisible ? "none" : "block";
-      document.querySelectorAll(".week-tab").forEach(t => t.classList.remove("week-active"));
-      tab.classList.add("week-active");
     };
 
     sidebar.appendChild(tab);
@@ -207,11 +205,12 @@ function loadModule(week, type) {
   
   if(userData.progress[key] === undefined) userData.progress[key] = 0;
   
-  // Ensure shuffle exists before rendering
   if (!userData.shuffledIndices[key] || userData.shuffledIndices[key].length === 0) {
       const questions = courseData[`week${currentWeek}`][currentModule];
-      let indices = Array.from(Array(questions.length).keys());
-      userData.shuffledIndices[key] = shuffle(indices);
+      if(questions) {
+          let indices = Array.from(Array(questions.length).keys());
+          userData.shuffledIndices[key] = shuffle(indices);
+      }
   }
 
   document.getElementById("modDisplay").innerText = `W${currentWeek}: ${type.toUpperCase()}`;
@@ -224,16 +223,11 @@ function renderExercise() {
   feedback.innerText = "";
   
   const questions = courseData[`week${currentWeek}`]?.[currentModule];
-  if(!questions) {
-      exDiv.innerHTML = "<h3>Content coming soon!</h3>";
-      return;
-  }
-  
   const progressKey = `week${currentWeek}_${currentModule}`;
   const currentIndex = userData.progress[progressKey] || 0;
 
-  if (currentIndex >= questions.length) {
-    exDiv.innerHTML = "<h2>🎉 Module Completed!</h2>";
+  if (!questions || currentIndex >= questions.length) {
+    exDiv.innerHTML = "<h2>🎉 Module Complete!</h2>";
     updateStats();
     return;
   }
@@ -251,48 +245,52 @@ function renderExercise() {
       exDiv.appendChild(btn);
     });
   } else {
-    const link = current.link ? `<br><a href="${current.link}" target="_blank" style="color:#3498db; font-weight:bold;">[CLICK TO VIEW ASSET]</a><br>` : "";
+    const link = current.link ? `<br><a href="${current.link}" target="_blank" style="color:#3498db; font-weight:bold;">[ASSET LINK]</a><br>` : "";
     exDiv.innerHTML = `
       <h3>${current.q}</h3>
       ${link}
       <br>
-      <input id="openAns" placeholder="Type in German..." style="width: 80%;">
+      <input id="openAns" placeholder="Type answer..." style="width: 80%;">
       <br>
-      <button class="primary-btn" id="submitOpenBtn">Submit Answer</button>
+      <button class="primary-btn" id="confirmBtn">Confirm</button>
     `;
     
-    // Explicitly check for button existence before adding listener
-    const btn = document.getElementById("submitOpenBtn");
-    if(btn) {
-        btn.onclick = () => {
-            const val = document.getElementById("openAns").value.trim();
-            checkAnswer(val, current.a);
-        };
-    }
+    // Explicit binding to fix button responsiveness
+    const submitBtn = document.getElementById("confirmBtn");
+    submitBtn.addEventListener("click", () => {
+      const inputField = document.getElementById("openAns");
+      if(inputField) {
+        checkAnswer(inputField.value.trim(), current.a);
+      }
+    });
   }
   updateStats();
 }
 
 async function checkAnswer(val, correct) {
   const feedback = document.getElementById("feedback");
-  const isCorrect = (val === correct || (typeof val === 'string' && val.toLowerCase().replace(/[.,!?]/g, "") === correct.toLowerCase().replace(/[.,!?]/g, "")));
+  const progressKey = `week${currentWeek}_${currentModule}`;
+  
+  const cleanUser = String(val).toLowerCase().replace(/[.,!?]/g, "").trim();
+  const cleanCorrect = String(correct).toLowerCase().replace(/[.,!?]/g, "").trim();
+  
+  const isCorrect = (val === correct || cleanUser === cleanCorrect);
 
   if(isCorrect) {
-    feedback.innerText = "✅ Korrekt!";
+    feedback.innerText = "✅ KORREKT!";
     feedback.className = "feedback correct";
     userData.xp += 10;
     userData.streak += 1;
-    const key = `week${currentWeek}_${currentModule}`;
-    userData.progress[key]++;
+    userData.progress[progressKey]++;
+    
     await setDoc(doc(db, "users", currentUser), userData);
     updateStats();
     setTimeout(() => renderExercise(), 800);
   } else {
-    const progressKey = `week${currentWeek}_${currentModule}`;
     const questionIndex = userData.shuffledIndices[progressKey][userData.progress[progressKey]];
     const displayCorrect = (typeof correct === 'number') ? courseData[`week${currentWeek}`][currentModule][questionIndex].a[correct] : correct;
     
-    feedback.innerText = `❌ Wrong. The answer is: "${displayCorrect}". Try again!`;
+    feedback.innerText = `❌ INCORRECT. Correct: "${displayCorrect}".`;
     feedback.className = "feedback wrong";
     userData.streak = 0;
     updateStats();
