@@ -7,24 +7,26 @@ const firebaseConfig = {
   projectId:"german-special-forces"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 let currentUser;
 
-let userData={
+let userData = {
   xp:0,
   streak:0,
   currentWeek:1,
   completedWeeks:[],
   exerciseIndex:0,
-  questionOrder:[]
+  questionOrder:[],
+  mode:"words"
 };
 
-/* ===== 50 REAL QUESTIONS ===== */
+/* =======================
+   WEEK 1 WORD QUESTIONS
+======================= */
 
-const exercisesWeek1=[
-
+const exercisesWeek1 = [
 {q:"Hello",a:["Hallo","Tschüss","Danke"],correct:0},
 {q:"Goodbye",a:["Bitte","Tschüss","Ja"],correct:1},
 {q:"Thank you",a:["Danke","Nein","Hallo"],correct:0},
@@ -34,91 +36,54 @@ const exercisesWeek1=[
 {q:"Good morning",a:["Guten Morgen","Gute Nacht","Hallo"],correct:0},
 {q:"Good night",a:["Guten Tag","Gute Nacht","Danke"],correct:1},
 {q:"How are you?",a:["Wie geht's?","Wo bist du?","Was ist das?"],correct:0},
-{q:"I am fine",a:["Ich bin gut","Ich bin traurig","Ich bin müde"],correct:0},
-
-{q:"One",a:["Eins","Zwei","Drei"],correct:0},
-{q:"Two",a:["Vier","Zwei","Fünf"],correct:1},
-{q:"Three",a:["Drei","Sieben","Neun"],correct:0},
-{q:"Four",a:["Sechs","Vier","Acht"],correct:1},
-{q:"Five",a:["Fünf","Zehn","Elf"],correct:0},
-{q:"Six",a:["Sechs","Zwei","Drei"],correct:0},
-{q:"Seven",a:["Acht","Sieben","Neun"],correct:1},
-{q:"Eight",a:["Sieben","Zehn","Acht"],correct:2},
-{q:"Nine",a:["Neun","Fünf","Vier"],correct:0},
-{q:"Ten",a:["Zehn","Elf","Zwölf"],correct:0},
-
-{q:"I",a:["Du","Ich","Er"],correct:1},
-{q:"You (informal)",a:["Du","Sie","Wir"],correct:0},
-{q:"He",a:["Sie","Er","Es"],correct:1},
-{q:"She",a:["Sie","Er","Ich"],correct:0},
-{q:"We",a:["Ihr","Wir","Du"],correct:1},
-{q:"They",a:["Sie","Wir","Es"],correct:0},
-
-{q:"House",a:["Auto","Haus","Baum"],correct:1},
-{q:"Car",a:["Auto","Haus","Zug"],correct:0},
-{q:"Book",a:["Stuhl","Buch","Tisch"],correct:1},
-{q:"Table",a:["Tür","Fenster","Tisch"],correct:2},
-{q:"Chair",a:["Stuhl","Lampe","Bett"],correct:0},
-
-{q:"Water",a:["Milch","Wasser","Saft"],correct:1},
-{q:"Bread",a:["Käse","Brot","Reis"],correct:1},
-{q:"Milk",a:["Milch","Wasser","Tee"],correct:0},
-{q:"Coffee",a:["Kaffee","Saft","Bier"],correct:0},
-{q:"Tea",a:["Kaffee","Tee","Milch"],correct:1},
-
-{q:"Mother",a:["Vater","Bruder","Mutter"],correct:2},
-{q:"Father",a:["Vater","Sohn","Onkel"],correct:0},
-{q:"Brother",a:["Schwester","Bruder","Cousin"],correct:1},
-{q:"Sister",a:["Tante","Schwester","Mutter"],correct:1},
-{q:"Friend",a:["Freund","Lehrer","Arzt"],correct:0},
-
-{q:"School",a:["Schule","Büro","Krankenhaus"],correct:0},
-{q:"Office",a:["Park","Büro","Restaurant"],correct:1},
-{q:"City",a:["Dorf","Stadt","Land"],correct:1},
-{q:"Country",a:["Land","Stadt","Haus"],correct:0},
-{q:"Train",a:["Auto","Bus","Zug"],correct:2},
-
-{q:"Today",a:["Heute","Morgen","Gestern"],correct:0},
-{q:"Tomorrow",a:["Heute","Gestern","Morgen"],correct:2},
-{q:"Yesterday",a:["Gestern","Heute","Nacht"],correct:0},
-{q:"Day",a:["Tag","Nacht","Woche"],correct:0},
-{q:"Night",a:["Tag","Abend","Nacht"],correct:2}
-
+{q:"I am fine",a:["Ich bin gut","Ich bin traurig","Ich bin müde"],correct:0}
 ];
 
-/* ===== LOGIN ===== */
+/* =======================
+   OPEN QUESTIONS
+======================= */
 
-document.getElementById("loginBtn").onclick=async()=>{
+const openQuestionsWeek1 = [
+"Write a short greeting conversation in German.",
+"Write 3 sentences introducing yourself in German.",
+"Create a short dialogue between two friends meeting.",
+"Write a sentence using Guten Morgen.",
+"Write a sentence using Danke and Bitte."
+];
 
-const username=document.getElementById("username").value.trim().toLowerCase();
-if(!username)return alert("Enter username");
+/* =======================
+   LOGIN
+======================= */
 
-currentUser=username;
+document.getElementById("loginBtn").onclick = async () => {
 
-const ref=doc(db,"users",currentUser);
-const snap=await getDoc(ref);
+  const username = document.getElementById("username").value.trim().toLowerCase();
+  if(!username) return alert("Enter username");
 
-if(snap.exists()){
-userData=snap.data();
-}else{
-userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
-await setDoc(ref,userData);
-}
+  currentUser = username;
 
-if(!userData.questionOrder || userData.questionOrder.length===0){
-userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
-}
+  const ref = doc(db,"users",currentUser);
+  const snap = await getDoc(ref);
 
-document.getElementById("login").style.display="none";
-document.getElementById("dashboard").style.display="block";
-document.getElementById("sidebar").style.display="block"; // 👈 show sidebar after login
+  if(snap.exists()){
+    userData = snap.data();
+  } else {
+    userData.questionOrder = shuffle([...Array(exercisesWeek1.length).keys()]);
+    await setDoc(ref,userData);
+  }
 
-renderSidebar();
-updateStats();
-renderExercise();
+  document.getElementById("login").style.display="none";
+  document.getElementById("dashboard").style.display="block";
+  document.getElementById("sidebar").style.display="block";
+
+  renderSidebar();
+  updateStats();
+  renderExercise();
 };
 
-/* ===== SHUFFLE ===== */
+/* =======================
+   SHUFFLE
+======================= */
 
 function shuffle(array){
 for(let i=array.length-1;i>0;i--){
@@ -128,7 +93,9 @@ const j=Math.floor(Math.random()*(i+1));
 return array;
 }
 
-/* ===== SIDEBAR ===== */
+/* =======================
+   SIDEBAR WITH FOLDERS
+======================= */
 
 function renderSidebar(){
 const sidebar=document.getElementById("sidebar");
@@ -136,33 +103,77 @@ sidebar.innerHTML="";
 
 for(let i=1;i<=3;i++){
 
-const tab=document.createElement("div");
-tab.className="week-tab";
-tab.innerText="Week "+i;
+const week=document.createElement("div");
+week.className="week-tab";
+week.innerText="Week "+i;
 
 if(i===userData.currentWeek){
-tab.classList.add("week-active");
+week.classList.add("week-active");
 }
+
 if(userData.completedWeeks.includes(i)){
-tab.classList.add("week-completed");
+week.classList.add("week-completed");
 }
 
-sidebar.appendChild(tab);
+week.onclick=()=>toggleWeekMenu(i);
+
+sidebar.appendChild(week);
+
+/* Sub menu */
+if(i===userData.currentWeek){
+
+const subMenu=document.createElement("div");
+subMenu.style.marginLeft="10px";
+
+["Words","Open Questions","Audio"].forEach(option=>{
+
+const sub=document.createElement("div");
+sub.style.padding="8px";
+sub.style.cursor="pointer";
+sub.innerText=option;
+
+sub.onclick=()=>switchMode(option.toLowerCase());
+
+subMenu.appendChild(sub);
+
+});
+
+sidebar.appendChild(subMenu);
+}
 }
 }
 
-/* ===== STATS ===== */
+/* =======================
+   SWITCH MODE
+======================= */
+
+function switchMode(mode){
+
+userData.mode=mode;
+userData.exerciseIndex=0;
+
+if(mode==="words"){
+if(!userData.questionOrder || userData.questionOrder.length===0){
+userData.questionOrder=shuffle([...Array(exercisesWeek1.length).keys()]);
+}
+}
+
+renderExercise();
+}
+
+/* =======================
+   STATS
+======================= */
 
 function updateStats(){
 document.getElementById("xp").innerText="XP: "+userData.xp;
 document.getElementById("streak").innerText="Streak: "+userData.streak;
 document.getElementById("weekDisplay").innerText="Week "+userData.currentWeek;
-
-const percent=(userData.exerciseIndex/exercisesWeek1.length)*100;
-document.getElementById("progressBar").style.width=percent+"%";
 }
 
-/* ===== EXERCISE ===== */
+/* =======================
+   RENDER CONTENT
+======================= */
 
 function renderExercise(){
 
@@ -171,34 +182,95 @@ const feedback=document.getElementById("feedback");
 feedback.innerText="";
 feedback.className="feedback";
 
-if(userData.exerciseIndex>=exercisesWeek1.length){
-
-exDiv.innerHTML="<h2>🎉 Week Completed!</h2>";
-
-if(!userData.completedWeeks.includes(1)){
-userData.completedWeeks.push(1);
-setDoc(doc(db,"users",currentUser),userData);
-renderSidebar();
+if(userData.mode==="words"){
+renderWordExercise();
+}
+else if(userData.mode==="open questions"){
+renderOpenQuestion();
+}
+else if(userData.mode==="audio"){
+renderAudioSection();
+}
 }
 
+/* =======================
+   WORD MODE
+======================= */
+
+function renderWordExercise(){
+
+const exDiv=document.getElementById("exercise");
+
+if(userData.exerciseIndex>=exercisesWeek1.length){
+exDiv.innerHTML="<h2>🎉 Words Completed!</h2>";
 return;
 }
 
-const questionIndex=userData.questionOrder[userData.exerciseIndex];
-const current=exercisesWeek1[questionIndex];
+const index=userData.questionOrder[userData.exerciseIndex];
+const current=exercisesWeek1[index];
 
 exDiv.innerHTML="<h3>"+current.q+"</h3>";
 
-current.a.forEach((answer,index)=>{
+current.a.forEach((answer,i)=>{
 const btn=document.createElement("button");
 btn.className="answer-btn";
 btn.innerText=answer;
-btn.onclick=()=>checkAnswer(index,current.correct);
+btn.onclick=()=>checkAnswer(i,current.correct);
 exDiv.appendChild(btn);
 });
 }
 
-/* ===== CHECK ANSWER ===== */
+/* =======================
+   OPEN QUESTIONS MODE
+======================= */
+
+function renderOpenQuestion(){
+
+const exDiv=document.getElementById("exercise");
+
+const random=openQuestionsWeek1[Math.floor(Math.random()*openQuestionsWeek1.length)];
+
+exDiv.innerHTML=`
+<h3>${random}</h3>
+<textarea style="width:100%;height:120px;margin-top:15px;"></textarea>
+<br><br>
+<button class="primary-btn">Submit</button>
+`;
+
+}
+
+/* =======================
+   AUDIO MODE
+======================= */
+
+function renderAudioSection(){
+
+const exDiv=document.getElementById("exercise");
+
+exDiv.innerHTML=`
+<h3>Audio Lessons</h3>
+
+<p>Audio 1</p>
+<audio controls>
+<source src="" type="audio/mpeg">
+</audio>
+
+<p>Audio 2</p>
+<audio controls>
+<source src="" type="audio/mpeg">
+</audio>
+
+<p>Audio 3</p>
+<audio controls>
+<source src="" type="audio/mpeg">
+</audio>
+`;
+
+}
+
+/* =======================
+   CHECK ANSWER
+======================= */
 
 async function checkAnswer(selected,correct){
 
@@ -227,4 +299,14 @@ feedback.classList.add("wrong");
 userData.streak=0;
 updateStats();
 }
+}
+
+/* =======================
+   TOGGLE WEEK MENU
+======================= */
+
+function toggleWeekMenu(week){
+userData.currentWeek=week;
+renderSidebar();
+renderExercise();
 }
