@@ -86,7 +86,7 @@ const courseData = {
       {q:"Say in German: How are you, friend?", a: "Wie geht's, Freund?"}
     ],
     audio: [
-      {q:"Watch the first 30 seconds of this training video. What is the first greeting Nico hears?", link: "https://www.youtube.com/watch?v=4-eDoThe6qo", a: "Hallo"}
+      {q:"Watch the first 30 seconds. What is the first greeting?", link: "https://www.youtube.com/watch?v=4-eDoThe6qo", a: "Hallo"}
     ]
   }
 };
@@ -124,6 +124,7 @@ function renderSidebar() {
       link.innerText = type;
       link.onclick = (e) => {
         e.stopPropagation();
+        // UI Fix: Highlight tab and link
         document.querySelectorAll(".week-tab").forEach(t => t.classList.remove("week-active"));
         tab.classList.add("week-active");
         loadModule(i, type);
@@ -132,9 +133,14 @@ function renderSidebar() {
     });
 
     tab.onclick = () => {
+      // Logic for accordion
       const isVisible = panel.style.display === "block";
       document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
       panel.style.display = isVisible ? "none" : "block";
+      
+      // Highlight the tab immediately on click
+      document.querySelectorAll(".week-tab").forEach(t => t.classList.remove("week-active"));
+      tab.classList.add("week-active");
     };
 
     sidebar.appendChild(tab);
@@ -145,9 +151,14 @@ function renderSidebar() {
 function loadModule(week, type) {
   currentWeek = week;
   currentModule = type.toLowerCase().replace(" ", "");
-  if(!userData.progress[`week${week}_${currentModule}`]) {
-    userData.progress[`week${week}_${currentModule}`] = 0;
+  
+  // Ensure progress exists for this module
+  const key = `week${currentWeek}_${currentModule}`;
+  if(userData.progress[key] === undefined) {
+    userData.progress[key] = 0;
   }
+  
+  document.getElementById("modDisplay").innerText = `W${currentWeek}: ${type.toUpperCase()}`;
   renderExercise();
 }
 
@@ -156,16 +167,21 @@ function renderExercise() {
   const feedback = document.getElementById("feedback");
   feedback.innerText = "";
   
-  const questions = courseData[`week${currentWeek}`][currentModule];
-  const index = userData.progress[`week${currentWeek}_${currentModule}`];
+  const questions = courseData[`week${currentWeek}`]?.[currentModule];
+  if(!questions) {
+      exDiv.innerHTML = "<h3>Content coming soon!</h3>";
+      return;
+  }
+  
+  const index = userData.progress[`week${currentWeek}_${currentModule}`] || 0;
 
   if (index >= questions.length) {
-    exDiv.innerHTML = "<h2>🎉 Mission Accomplished! Module Complete.</h2>";
+    exDiv.innerHTML = "<h2>🎉 Module Completed!</h2>";
+    updateStats(); // Update one last time to show 100%
     return;
   }
 
   const current = questions[index];
-  document.getElementById("modDisplay").innerText = `W${currentWeek}: ${currentModule.toUpperCase()}`;
 
   if(currentModule === "words") {
     exDiv.innerHTML = "<h3>" + current.q + "</h3>";
@@ -177,15 +193,16 @@ function renderExercise() {
       exDiv.appendChild(btn);
     });
   } else {
-    const link = current.link ? `<br><a href="${current.link}" target="_blank" style="color: #3498db; font-weight: bold;">[CLICK HERE TO VIEW ASSET]</a><br>` : "";
+    const link = current.link ? `<br><a href="${current.link}" target="_blank" style="color:#3498db; font-weight:bold;">[CLICK TO VIEW ASSET]</a><br>` : "";
     exDiv.innerHTML = `<h3>${current.q}</h3>${link}<br>
       <input id="openAns" placeholder="Type in German..." style="width: 80%;"><br>
       <button class="primary-btn" id="submitOpenBtn">Submit Answer</button>`;
       
-    document.getElementById("submitOpenBtn").onclick = () => {
+    // Fix: Using direct listener for the dynamic button
+    document.getElementById("submitOpenBtn").addEventListener("click", () => {
         const val = document.getElementById("openAns").value.trim();
         checkAnswer(val, current.a);
-    };
+    });
   }
   updateStats();
 }
@@ -199,25 +216,33 @@ async function checkAnswer(val, correct) {
     feedback.className = "feedback correct";
     userData.xp += 10;
     userData.streak += 1;
-    userData.progress[`week${currentWeek}_${currentModule}`]++;
+    
+    // Increment and Save
+    const key = `week${currentWeek}_${currentModule}`;
+    userData.progress[key]++;
+    
     await setDoc(doc(db, "users", currentUser), userData);
+    updateStats();
     setTimeout(() => renderExercise(), 800);
   } else {
     const displayCorrect = (typeof correct === 'number') ? courseData[`week${currentWeek}`][currentModule][userData.progress[`week${currentWeek}_${currentModule}`]].a[correct] : correct;
     feedback.innerText = `❌ Wrong. The answer is: "${displayCorrect}". Try again!`;
     feedback.className = "feedback wrong";
     userData.streak = 0;
+    updateStats();
   }
-  updateStats();
 }
 
 function updateStats() {
   document.getElementById("xp").innerText = "XP: " + userData.xp;
   document.getElementById("streak").innerText = "Streak: " + userData.streak;
-  const questions = courseData[`week${currentWeek}`][currentModule];
+  
+  const questions = courseData[`week${currentWeek}`]?.[currentModule];
   if(questions) {
-    const index = userData.progress[`week${currentWeek}_${currentModule}`];
+    const index = userData.progress[`week${currentWeek}_${currentModule}`] || 0;
     const percent = (index / questions.length) * 100;
     document.getElementById("progressBar").style.width = percent + "%";
+  } else {
+    document.getElementById("progressBar").style.width = "0%";
   }
 }
