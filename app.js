@@ -153,8 +153,12 @@ document.getElementById("loginBtn").onclick = async () => {
   currentUser = username;
   const ref = doc(db, "users", currentUser);
   const snap = await getDoc(ref);
-  if(snap.exists()) userData = snap.data();
-  else await setDoc(ref, userData);
+  if(snap.exists()) {
+      userData = snap.data();
+      if(!userData.shuffledIndices) userData.shuffledIndices = {};
+  } else {
+      await setDoc(ref, userData);
+  }
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
@@ -198,19 +202,30 @@ function renderSidebar() {
   }
 }
 
-function loadModule(week, type) {
+async function loadModule(week, type) {
   currentWeek = week;
-  currentModule = type.toLowerCase().replace(" ", "");
+  
+  // FIX: Map "Open Questions" to the "open" key in courseData
+  if (type === "Open Questions") {
+      currentModule = "open";
+  } else {
+      currentModule = type.toLowerCase().replace(" ", "");
+  }
+
   const key = `week${currentWeek}_${currentModule}`;
   
   if(userData.progress[key] === undefined) userData.progress[key] = 0;
   
-  if (!userData.shuffledIndices[key] || userData.shuffledIndices[key].length === 0) {
-      const questions = courseData[`week${currentWeek}`][currentModule];
-      if(questions) {
-          let indices = Array.from(Array(questions.length).keys());
-          userData.shuffledIndices[key] = shuffle(indices);
-      }
+  const questions = courseData[`week${currentWeek}`][currentModule];
+  if(!questions) {
+      console.error("Module data not found for:", key);
+      return;
+  }
+
+  if (!userData.shuffledIndices[key] || userData.shuffledIndices[key].length !== questions.length) {
+      let indices = Array.from(Array(questions.length).keys());
+      userData.shuffledIndices[key] = shuffle(indices);
+      await setDoc(doc(db, "users", currentUser), userData);
   }
 
   document.getElementById("modDisplay").innerText = `W${currentWeek}: ${type.toUpperCase()}`;
@@ -224,15 +239,27 @@ function renderExercise() {
   
   const questions = courseData[`week${currentWeek}`]?.[currentModule];
   const progressKey = `week${currentWeek}_${currentModule}`;
+  
+  if (!questions) {
+      exDiv.innerHTML = "<h3>Module Content Missing</h3>";
+      return;
+  }
+
   const currentIndex = userData.progress[progressKey] || 0;
 
-  if (!questions || currentIndex >= questions.length) {
+  if (currentIndex >= questions.length) {
     exDiv.innerHTML = "<h2>🎉 Module Complete!</h2>";
     updateStats();
     return;
   }
 
-  const questionIndex = userData.shuffledIndices[progressKey][currentIndex];
+  const shuffleList = userData.shuffledIndices[progressKey];
+  if (!shuffleList) {
+      exDiv.innerHTML = "<h3>Initializing... Click again.</h3>";
+      return;
+  }
+
+  const questionIndex = shuffleList[currentIndex];
   const current = questions[questionIndex];
 
   if(currentModule === "words") {
@@ -245,24 +272,29 @@ function renderExercise() {
       exDiv.appendChild(btn);
     });
   } else {
-    const link = current.link ? `<br><a href="${current.link}" target="_blank" style="color:#3498db; font-weight:bold;">[ASSET LINK]</a><br>` : "";
     exDiv.innerHTML = `
       <h3>${current.q}</h3>
-      ${link}
       <br>
-      <input id="openAns" placeholder="Type answer..." style="width: 80%;">
+      <input id="openAns" placeholder="Type answer..." style="width: 80%; padding: 10px; margin-bottom: 10px;">
       <br>
-      <button class="primary-btn" id="confirmBtn">Confirm</button>
+      <button class="primary-btn" id="confirmBtn" style="padding: 10px 20px;">Confirm</button>
     `;
     
-    // Explicit binding to fix button responsiveness
-    const submitBtn = document.getElementById("confirmBtn");
-    submitBtn.addEventListener("click", () => {
-      const inputField = document.getElementById("openAns");
-      if(inputField) {
+    const inputField = document.getElementById("openAns");
+    const confirmBtn = document.getElementById("confirmBtn");
+
+    confirmBtn.onclick = () => {
+      checkAnswer(inputField.value.trim(), current.a);
+    };
+
+    // Allow Enter key to submit
+    inputField.onkeydown = (e) => {
+      if (e.key === "Enter") {
         checkAnswer(inputField.value.trim(), current.a);
       }
-    });
+    };
+
+    setTimeout(() => inputField.focus(), 10);
   }
   updateStats();
 }
@@ -285,12 +317,13 @@ async function checkAnswer(val, correct) {
     
     await setDoc(doc(db, "users", currentUser), userData);
     updateStats();
-    setTimeout(() => renderExercise(), 800);
+    setTimeout(() => renderExercise(), 600);
   } else {
-    const questionIndex = userData.shuffledIndices[progressKey][userData.progress[progressKey]];
+    const shuffleList = userData.shuffledIndices[progressKey];
+    const questionIndex = shuffleList[userData.progress[progressKey]];
     const displayCorrect = (typeof correct === 'number') ? courseData[`week${currentWeek}`][currentModule][questionIndex].a[correct] : correct;
     
-    feedback.innerText = `❌ INCORRECT. Correct: "${displayCorrect}".`;
+    feedback.innerText = `❌ INCORRECT. Correct answer: "${displayCorrect}".`;
     feedback.className = "feedback wrong";
     userData.streak = 0;
     updateStats();
@@ -304,7 +337,7 @@ function updateStats() {
   if(questions) {
     const key = `week${currentWeek}_${currentModule}`;
     const index = userData.progress[key] || 0;
-    const percent = (index / questions.length) * 100;
+    const percent = Math.min((index / questions.length) * 100, 100);
     document.getElementById("progressBar").style.width = percent + "%";
   }
 }
