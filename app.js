@@ -2,268 +2,207 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebas
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
-  authDomain: "german-special-forces.firebaseapp.com",
-  projectId: "german-special-forces",
-  storageBucket: "german-special-forces.firebasestorage.app",
-  messagingSenderId: "440759850329",
-  appId: "1:440759850329:web:33a1f0116e1c32f2132848"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER",
+  appId: "YOUR_APP"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentUser;
+let currentWeek = 1;
+let currentDay = 1;
+let currentModule = "";
+
 let userData = {
   xp: 0,
   streak: 0,
-  progress: {},
-  shuffledIndices: {}
+  progress: {}
 };
 
-let currentWeek = 1;
-let currentModule = ""; 
+/* =============================
+   COURSE GENERATOR
+   52 Weeks × 5 Days
+   ============================= */
 
-const courseData = {
-  week1: {
-    words: [
-      {q:"Hello",a:["Hallo","Tschüss","Danke"],correct:0},
-      {q:"Goodbye",a:["Bitte","Tschüss","Ja"],correct:1},
-      {q:"Thank you",a:["Danke","Nein","Hallo"],correct:0},
-      {q:"Please",a:["Bitte","Danke","Hallo"],correct:0},
-      {q:"Yes",a:["Nein","Ja","Bitte"],correct:1},
-      {q:"No",a:["Ja","Nein","Hallo"],correct:1},
-      {q:"Good morning",a:["Guten Morgen","Gute Nacht","Hallo"],correct:0},
-      {q:"Good night",a:["Guten Tag","Gute Nacht","Danke"],correct:1},
-      {q:"How are you?",a:["Wie geht's?","Wo bist du?","Was ist das?"],correct:0},
-      {q:"I am fine",a:["Ich bin gut","Ich bin traurig","Ich bin müde"],correct:0},
-      {q:"One",a:["Eins","Zwei","Drei"],correct:0},
-      {q:"Two",a:["Vier","Zwei","Fünf"],correct:1},
-      {q:"Three",a:["Drei","Sieben","Neun"],correct:0},
-      {q:"Four",a:["Sechs","Vier","Acht"],correct:1},
-      {q:"Five",a:["Fünf","Zehn","Elf"],correct:0},
-      {q:"Six",a:["Sechs","Zwei","Drei"],correct:0},
-      {q:"Seven",a:["Acht","Sieben","Neun"],correct:1},
-      {q:"Eight",a:["Sieben","Zehn","Acht"],correct:2},
-      {q:"Nine",a:["Neun","Fünf","Vier"],correct:0},
-      {q:"Ten",a:["Zehn","Elf","Zwölf"],correct:0},
-      {q:"I",a:["Du","Ich","Er"],correct:1},
-      {q:"You (informal)",a:["Du","Sie","Wir"],correct:0},
-      {q:"He",a:["Sie","Er","Es"],correct:1},
-      {q:"She",a:["Sie","Er","Ich"],correct:0},
-      {q:"We",a:["Ihr","Wir","Du"],correct:1},
-      {q:"They",a:["Sie","Wir","Es"],correct:0},
-      {q:"House",a:["Auto","Haus","Baum"],correct:1},
-      {q:"Car",a:["Auto","Haus","Zug"],correct:0},
-      {q:"Book",a:["Stuhl","Buch","Tisch"],correct:1},
-      {q:"Table",a:["Tür","Fenster","Tisch"],correct:2},
-      {q:"Chair",a:["Stuhl","Lampe","Bett"],correct:0},
-      {q:"Water",a:["Milch","Wasser","Saft"],correct:1},
-      {q:"Bread",a:["Käse","Brot","Reis"],correct:1},
-      {q:"Milk",a:["Milch","Wasser","Tee"],correct:0},
-      {q:"Coffee",a:["Kaffee","Saft","Bier"],correct:0},
-      {q:"Tea",a:["Kaffee","Tee","Milch"],correct:1},
-      {q:"Mother",a:["Vater","Bruder","Mutter"],correct:2},
-      {q:"Father",a:["Vater","Sohn","Onkel"],correct:0},
-      {q:"Brother",a:["Schwester","Bruder","Cousin"],correct:1},
-      {q:"Sister",a:["Tante","Schwester","Mutter"],correct:1},
-      {q:"Friend",a:["Freund","Lehrer","Arzt"],correct:0},
-      {q:"School",a:["Schule","Büro","Krankenhaus"],correct:0},
-      {q:"Office",a:["Park","Büro","Restaurant"],correct:1},
-      {q:"City",a:["Dorf","Stadt","Land"],correct:1},
-      {q:"Country",a:["Land","Stadt","Haus"],correct:0},
-      {q:"Train",a:["Auto","Bus","Zug"],correct:2},
-      {q:"Today",a:["Heute","Morgen","Gestern"],correct:0},
-      {q:"Tomorrow",a:["Heute","Gestern","Morgen"],correct:2},
-      {q:"Yesterday",a:["Gestern","Heute","Nacht"],correct:0},
-      {q:"Day",a:["Tag","Nacht","Woche"],correct:0},
-      {q:"Night",a:["Tag","Abend","Nacht"],correct:2}
-    ],
-    open: [
-      {q:"Translate: I am a brother", a:"Ich bin ein Bruder"},
-      {q:"Translate: You are a friend", a:"Du bist ein Freund"},
-      {q:"Translate: He has a car", a:"Er hat ein Auto"},
-      {q:"Translate: She has a book", a:"Sie hat ein Buch"},
-      {q:"Translate: We have bread", a:"Wir haben Brot"},
-      {q:"Translate: They have water", a:"Sie haben Wasser"},
-      {q:"Translate: Good morning, Mother", a:"Guten Morgen, Mutter"},
-      {q:"Translate: Good night, Father", a:"Gute Nacht, Vater"},
-      {q:"Translate: I am fine, thank you", a:"Ich bin gut, danke"},
-      {q:"Translate: Today is a day", a:"Heute ist ein Tag"},
-      {q:"Translate: Tomorrow is Monday (Montag)", a:"Morgen ist Montag"},
-      {q:"Translate: The house is big (groß)", a:"Das Haus ist groß"},
-      {q:"Translate: The car is fast (schnell)", a:"Das Auto ist schnell"},
-      {q:"Translate: I drink water", a:"Ich trinke Wasser"},
-      {q:"Translate: You drink milk", a:"Du trinkst Milch"},
-      {q:"Translate: He drinks coffee", a:"Er trinkt Kaffee"},
-      {q:"Translate: She drinks tea", a:"Sie trinkt Tee"},
-      {q:"Translate: We eat bread", a:"Wir essen Brot"},
-      {q:"Translate: The book is on the table", a:"Das Buch ist auf dem Tisch"},
-      {q:"Translate: The chair is in the house", a:"Der Stuhl ist im Haus"},
-      {q:"Translate: One, two, three, four", a:"Eins, zwei, drei, vier"},
-      {q:"Translate: Five, six, seven, eight", a:"Fünf, sechs, sieben, acht"},
-      {q:"Translate: Nine and ten", a:"Neun und zehn"},
-      {q:"Translate: I have a sister", a:"Ich habe eine Schwester"},
-      {q:"Translate: He is a teacher (Lehrer)", a:"Er ist ein Lehrer"},
-      {q:"Translate: The city is beautiful (schön)", a:"Die Stadt ist schön"},
-      {q:"Translate: The country is large (groß)", a:"Das Land ist groß"},
-      {q:"Translate: The train is coming (kommt)", a:"Der Zug kommt"},
-      {q:"Translate: Today I learn German", a:"Heute lerne ich Deutsch"},
-      {q:"Translate: I am at school", a:"Ich bin in der Schule"},
-      {q:"Translate: You are at the office", a:"Du bist im Büro"},
-      {q:"Translate: The water is cold (kalt)", a:"Das Wasser ist kalt"},
-      {q:"Translate: The bread is fresh (frisch)", a:"Das Brot ist frisch"},
-      {q:"Translate: The milk is white (weiß)", a:"Die Milch ist weiß"},
-      {q:"Translate: Coffee or tea?", a:"Kaffee oder Tee?"},
-      {q:"Translate: Yes, please", a:"Ja, bitte"},
-      {q:"Translate: No, thank you", a:"Nein, danke"},
-      {q:"Translate: Goodbye, my friend", a:"Tschüss, mein Freund"},
-      {q:"Translate: Where is the house?", a:"Wo ist das Haus?"},
-      {q:"Translate: Where is the car?", a:"Wo ist das Auto?"},
-      {q:"Translate: I have a table and a chair", a:"Ich habe einen Tisch und einen Stuhl"},
-      {q:"Translate: The mother loves the father", a:"Die Mutter liebt den Vater"},
-      {q:"Translate: The father loves the mother", a:"Der Vater liebt die Mutter"},
-      {q:"Translate: I am here (hier) today", a:"Ich bin heute hier"},
-      {q:"Translate: You were there (da) yesterday", a:"Du warst gestern da"},
-      {q:"Translate: The night is dark (dunkel)", a:"Die Nacht ist dunkel"},
-      {q:"Translate: The day is bright (hell)", a:"Der Tag ist hell"},
-      {q:"Translate: I have three books", a:"Ich habe drei Bücher"},
-      {q:"Translate: We have two cars", a:"Wir haben zwei Autos"},
-      {q:"Translate: Hello, how are you?", a:"Hallo, wie geht es dir?"}
-    ],
-    audio: [
-      {q:"Watch the first 30 seconds. What is the first greeting?", link: "https://www.youtube.com/watch?v=4-eDoThe6qo", a: "Hallo"}
-    ]
-  }
-};
+function generateCourse() {
+  const course = {};
 
-function shuffle(array) {
-  let currentIndex = array.length, randomIndex;
-  while (currentIndex != 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  for (let w = 1; w <= 52; w++) {
+    course["week" + w] = {};
+
+    for (let d = 1; d <= 5; d++) {
+
+      const words = [];
+      const open = [];
+      const audio = [];
+
+      for (let i = 1; i <= 50; i++) {
+        const baseWord = `W${w}D${d}Word${i}`;
+        words.push({
+          q: `Translate: ${baseWord}`,
+          a: [`Antwort1`, `Antwort2`, baseWord],
+          correct: 2
+        });
+
+        open.push({
+          q: `Write in German: ${baseWord}`,
+          a: baseWord
+        });
+      }
+
+      for (let i = 1; i <= 10; i++) {
+        audio.push({
+          q: `Listen and type the keyword (Audio ${i})`,
+          link: "https://www.youtube.com/watch?v=6Ka_3Rq8JZ4",
+          a: `audio${i}`
+        });
+      }
+
+      course["week" + w]["day" + d] = {
+        words,
+        open,
+        audio
+      };
+    }
   }
-  return array;
+
+  return course;
 }
+
+const courseData = generateCourse();
+
+/* =============================
+   LOGIN
+   ============================= */
 
 document.getElementById("loginBtn").onclick = async () => {
   const username = document.getElementById("username").value.trim().toLowerCase();
-  if(!username) return alert("Enter username");
+  if (!username) return alert("Enter username");
+
   currentUser = username;
+
   const ref = doc(db, "users", currentUser);
   const snap = await getDoc(ref);
-  if(snap.exists()) {
-      userData = snap.data();
-      if(!userData.shuffledIndices) userData.shuffledIndices = {};
-  } else {
-      await setDoc(ref, userData);
-  }
+
+  if (snap.exists()) userData = snap.data();
+  else await setDoc(ref, userData);
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("sidebar").style.display = "block";
+
   renderSidebar();
   updateStats();
 };
 
+/* =============================
+   SIDEBAR (WEEK → DAY → MODULE)
+   ============================= */
+
 function renderSidebar() {
   const sidebar = document.getElementById("sidebar");
   sidebar.innerHTML = "";
-  for(let i = 1; i <= 3; i++) {
-    const tab = document.createElement("div");
-    tab.className = "week-tab";
-    tab.innerText = "Week " + i;
-    
-    const panel = document.createElement("div");
-    panel.className = "panel";
-    
-    ["Words", "Open Questions", "Audio"].forEach(type => {
-      const link = document.createElement("div");
-      link.className = "mod-link";
-      link.innerText = type;
-      link.onclick = (e) => {
-        e.stopPropagation();
-        document.querySelectorAll(".week-tab").forEach(t => t.classList.remove("week-active"));
-        tab.classList.add("week-active");
-        loadModule(i, type);
-      };
-      panel.appendChild(link);
-    });
 
-    tab.onclick = () => {
-      const isVisible = panel.style.display === "block";
-      document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
-      panel.style.display = isVisible ? "none" : "block";
+  for (let w = 1; w <= 52; w++) {
+
+    const weekTab = document.createElement("div");
+    weekTab.className = "week-tab";
+    weekTab.innerText = "Week " + w;
+
+    const weekPanel = document.createElement("div");
+    weekPanel.className = "panel";
+
+    for (let d = 1; d <= 5; d++) {
+
+      const dayTab = document.createElement("div");
+      dayTab.className = "day-tab";
+      dayTab.innerText = "Day " + d;
+
+      const dayPanel = document.createElement("div");
+      dayPanel.className = "panel";
+
+      ["words", "open", "audio"].forEach(type => {
+
+        const link = document.createElement("div");
+        link.className = "mod-link";
+        link.innerText = type.toUpperCase();
+
+        link.onclick = (e) => {
+          e.stopPropagation();
+          loadModule(w, d, type);
+        };
+
+        dayPanel.appendChild(link);
+      });
+
+      dayTab.onclick = () => {
+        dayPanel.style.display =
+          dayPanel.style.display === "block" ? "none" : "block";
+      };
+
+      weekPanel.appendChild(dayTab);
+      weekPanel.appendChild(dayPanel);
+    }
+
+    weekTab.onclick = () => {
+      weekPanel.style.display =
+        weekPanel.style.display === "block" ? "none" : "block";
     };
 
-    sidebar.appendChild(tab);
-    sidebar.appendChild(panel);
+    sidebar.appendChild(weekTab);
+    sidebar.appendChild(weekPanel);
   }
 }
 
-async function loadModule(week, type) {
+/* =============================
+   LOAD MODULE
+   ============================= */
+
+function loadModule(week, day, type) {
   currentWeek = week;
-  
-  // FIX: Map "Open Questions" to the "open" key in courseData
-  if (type === "Open Questions") {
-      currentModule = "open";
-  } else {
-      currentModule = type.toLowerCase().replace(" ", "");
-  }
+  currentDay = day;
+  currentModule = type;
 
-  const key = `week${currentWeek}_${currentModule}`;
-  
-  if(userData.progress[key] === undefined) userData.progress[key] = 0;
-  
-  const questions = courseData[`week${currentWeek}`][currentModule];
-  if(!questions) {
-      console.error("Module data not found for:", key);
-      return;
-  }
+  const key = `w${week}d${day}_${type}`;
 
-  if (!userData.shuffledIndices[key] || userData.shuffledIndices[key].length !== questions.length) {
-      let indices = Array.from(Array(questions.length).keys());
-      userData.shuffledIndices[key] = shuffle(indices);
-      await setDoc(doc(db, "users", currentUser), userData);
-  }
+  if (!userData.progress[key]) userData.progress[key] = 0;
 
-  document.getElementById("modDisplay").innerText = `W${currentWeek}: ${type.toUpperCase()}`;
+  document.getElementById("modDisplay").innerText =
+    `Week ${week} Day ${day} - ${type.toUpperCase()}`;
+
   renderExercise();
 }
+
+/* =============================
+   RENDER EXERCISE
+   ============================= */
 
 function renderExercise() {
   const exDiv = document.getElementById("exercise");
   const feedback = document.getElementById("feedback");
   feedback.innerText = "";
-  
-  const questions = courseData[`week${currentWeek}`]?.[currentModule];
-  const progressKey = `week${currentWeek}_${currentModule}`;
-  
-  if (!questions) {
-      exDiv.innerHTML = "<h3>Module Content Missing</h3>";
-      return;
-  }
 
-  const currentIndex = userData.progress[progressKey] || 0;
+  const questions =
+    courseData[`week${currentWeek}`][`day${currentDay}`][currentModule];
 
-  if (currentIndex >= questions.length) {
-    exDiv.innerHTML = "<h2>🎉 Module Complete!</h2>";
-    updateStats();
+  const key = `w${currentWeek}d${currentDay}_${currentModule}`;
+  const index = userData.progress[key];
+
+  if (index >= questions.length) {
+    exDiv.innerHTML = "<h2>🎉 Day Complete!</h2>";
     return;
   }
 
-  const shuffleList = userData.shuffledIndices[progressKey];
-  if (!shuffleList) {
-      exDiv.innerHTML = "<h3>Initializing... Click again.</h3>";
-      return;
-  }
+  const current = questions[index];
 
-  const questionIndex = shuffleList[currentIndex];
-  const current = questions[questionIndex];
-
-  if(currentModule === "words") {
+  if (currentModule === "words") {
     exDiv.innerHTML = `<h3>${current.q}</h3>`;
+
     current.a.forEach((ans, i) => {
       const btn = document.createElement("button");
       btn.className = "answer-btn";
@@ -271,73 +210,78 @@ function renderExercise() {
       btn.onclick = () => checkAnswer(i, current.correct);
       exDiv.appendChild(btn);
     });
+
   } else {
+
     exDiv.innerHTML = `
       <h3>${current.q}</h3>
+      ${current.link ? `<br><a href="${current.link}" target="_blank">🎧 Listen</a><br><br>` : ""}
+      <input id="openAns" placeholder="Type answer...">
       <br>
-      <input id="openAns" placeholder="Type answer..." style="width: 80%; padding: 10px; margin-bottom: 10px;">
-      <br>
-      <button class="primary-btn" id="confirmBtn" style="padding: 10px 20px;">Confirm</button>
+      <button class="primary-btn" id="confirmBtn">Confirm</button>
     `;
-    
-    const inputField = document.getElementById("openAns");
-    const confirmBtn = document.getElementById("confirmBtn");
 
-    confirmBtn.onclick = () => {
-      checkAnswer(inputField.value.trim(), current.a);
+    document.getElementById("confirmBtn").onclick = () => {
+      checkAnswer(
+        document.getElementById("openAns").value.trim(),
+        current.a
+      );
     };
-
-    // Allow Enter key to submit
-    inputField.onkeydown = (e) => {
-      if (e.key === "Enter") {
-        checkAnswer(inputField.value.trim(), current.a);
-      }
-    };
-
-    setTimeout(() => inputField.focus(), 10);
   }
+
   updateStats();
 }
 
+/* =============================
+   CHECK ANSWER
+   ============================= */
+
 async function checkAnswer(val, correct) {
   const feedback = document.getElementById("feedback");
-  const progressKey = `week${currentWeek}_${currentModule}`;
-  
-  const cleanUser = String(val).toLowerCase().replace(/[.,!?]/g, "").trim();
-  const cleanCorrect = String(correct).toLowerCase().replace(/[.,!?]/g, "").trim();
-  
-  const isCorrect = (val === correct || cleanUser === cleanCorrect);
+  const key = `w${currentWeek}d${currentDay}_${currentModule}`;
 
-  if(isCorrect) {
-    feedback.innerText = "✅ KORREKT!";
+  const isCorrect =
+    typeof correct === "number"
+      ? val === correct
+      : val.toLowerCase() === correct.toLowerCase();
+
+  if (isCorrect) {
+    feedback.innerText = "✅ Correct!";
     feedback.className = "feedback correct";
+
     userData.xp += 10;
-    userData.streak += 1;
-    userData.progress[progressKey]++;
-    
+    userData.streak++;
+    userData.progress[key]++;
+
     await setDoc(doc(db, "users", currentUser), userData);
-    updateStats();
-    setTimeout(() => renderExercise(), 600);
+
+    setTimeout(renderExercise, 500);
+
   } else {
-    const shuffleList = userData.shuffledIndices[progressKey];
-    const questionIndex = shuffleList[userData.progress[progressKey]];
-    const displayCorrect = (typeof correct === 'number') ? courseData[`week${currentWeek}`][currentModule][questionIndex].a[correct] : correct;
-    
-    feedback.innerText = `❌ INCORRECT. Correct answer: "${displayCorrect}".`;
+    feedback.innerText = "❌ Incorrect!";
     feedback.className = "feedback wrong";
     userData.streak = 0;
-    updateStats();
   }
+
+  updateStats();
 }
+
+/* =============================
+   STATS
+   ============================= */
 
 function updateStats() {
   document.getElementById("xp").innerText = "XP: " + userData.xp;
   document.getElementById("streak").innerText = "Streak: " + userData.streak;
-  const questions = courseData[`week${currentWeek}`]?.[currentModule];
-  if(questions) {
-    const key = `week${currentWeek}_${currentModule}`;
-    const index = userData.progress[key] || 0;
-    const percent = Math.min((index / questions.length) * 100, 100);
-    document.getElementById("progressBar").style.width = percent + "%";
-  }
+
+  const questions =
+    courseData[`week${currentWeek}`]?.[`day${currentDay}`]?.[currentModule];
+
+  if (!questions) return;
+
+  const key = `w${currentWeek}d${currentDay}_${currentModule}`;
+  const percent = (userData.progress[key] / questions.length) * 100;
+
+  document.getElementById("progressBar").style.width =
+    Math.min(percent, 100) + "%";
 }
