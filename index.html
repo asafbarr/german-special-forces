@@ -5,56 +5,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>German Special Forces</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+
 <style>
 body{
   font-family:'Roboto',sans-serif;
   margin:0;
   min-height:100vh;
-  background-image:url('https://image.shutterstock.com/image-vector/deutsch-interpreter-language-online-german-260nw-2204068283.jpg');
-  background-size:cover;
-  background-position:center;
+  background:#f4f6f9;
   display:flex;
   align-items:center;
   justify-content:center;
 }
-body::before{
-  content:"";
-  position:fixed;
-  width:100%;
-  height:100%;
-  background:rgba(255,255,255,0.92);
-  z-index:0;
-}
+
 .container{
-  width:1100px;
+  width:1200px;
   background:white;
   border-radius:20px;
-  box-shadow:0 15px 40px rgba(0,0,0,0.2);
+  box-shadow:0 15px 40px rgba(0,0,0,0.15);
   display:flex;
-  z-index:1;
-  position:relative;
-  min-height: 600px;
+  min-height:700px;
 }
+
 .sidebar{
-  width:200px;
+  width:260px;
   border-right:1px solid #eee;
   padding:20px;
+  overflow-y:auto;
   display:none;
 }
-/* Accordion Styling */
-.week-tab{
-  padding:12px;
+
+.week-tab, .day-tab{
+  padding:10px;
   border-radius:8px;
   margin-bottom:5px;
   cursor:pointer;
   font-weight:bold;
   background:#eee;
-  text-align: center;
 }
-.week-active{ background:#3498db; color:white; }
-.panel{ display:none; padding-left: 10px; margin-bottom: 15px; }
+
+.week-tab:hover, .day-tab:hover{ background:#dfe6e9; }
+
+.panel{
+  display:none;
+  margin-left:10px;
+  margin-bottom:10px;
+}
+
 .mod-link{
-  padding:8px;
+  padding:6px;
   margin:4px 0;
   font-size:14px;
   cursor:pointer;
@@ -62,48 +60,93 @@ body::before{
   background:#f8f9fa;
   border:1px solid #ddd;
 }
+
 .mod-link:hover{ background:#3498db; color:white; }
 
-.main{ flex:1; padding:40px; }
+.main{
+  flex:1;
+  padding:40px;
+}
+
 h1{ font-family:'Montserrat',sans-serif; text-align:center; }
-input{ padding:12px; border-radius:8px; border:1px solid #ccc; width:250px; }
-button{ padding:12px 25px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; margin:8px; }
+
+input{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  padding:10px 20px;
+  border-radius:8px;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+  margin:6px;
+}
+
 .primary-btn{ background:#3498db; color:white; }
-.answer-btn{ background:#2ecc71; color:white; width: 40%; }
-.progress-container{ background:#ddd; border-radius:20px; height:25px; margin:20px 0; overflow:hidden; }
-.progress-bar{ height:100%; width:0%; background:linear-gradient(90deg,#f1c40f,#e67e22); transition:0.3s; }
+.answer-btn{ background:#2ecc71; color:white; width:40%; }
+
+.progress-container{
+  background:#ddd;
+  border-radius:20px;
+  height:25px;
+  margin:20px 0;
+  overflow:hidden;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#f1c40f,#e67e22);
+  transition:0.3s;
+}
+
 .feedback{ font-weight:bold; margin-top:15px; font-size:18px; text-align:center; }
 .correct{color:green;}
 .wrong{color:red;}
+
 #dashboard{display:none;}
-.center{text-align:center;}
 .stats{display:flex;justify-content:space-between;}
+.center{text-align:center;}
 </style>
 </head>
+
 <body>
+
 <div class="container">
 <div class="sidebar" id="sidebar"></div>
+
 <div class="main">
 <div id="login" class="center">
 <h1>🇩🇪 German Special Forces</h1>
-<h3>Login / Register</h3>
+<h3>Login</h3>
 <input id="username" placeholder="Enter username">
 <br><br>
 <button class="primary-btn" id="loginBtn">Start Mission</button>
 </div>
+
 <div id="dashboard">
 <h1>🇩🇪 German Special Forces</h1>
+
 <div class="stats">
 <div id="modDisplay">Select Module</div>
 <div id="xp">XP: 0</div>
 <div id="streak">Streak: 0</div>
 </div>
-<div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="progress-container">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
 <div id="exercise" class="center"></div>
 <div id="feedback" class="feedback"></div>
+
 </div>
 </div>
 </div>
+
 <script type="module" src="app.js"></script>
 </body>
 </html>
