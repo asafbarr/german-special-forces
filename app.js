@@ -2,12 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebas
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER",
-  appId: "YOUR_APP"
+  apiKey: "AIzaSyCWAkeJhwzxwdKsbCKavOu9C-pZIZENftI",
+  authDomain: "german-special-forces.firebaseapp.com",
+  projectId: "german-special-forces",
+  storageBucket: "german-special-forces.firebasestorage.app",
+  messagingSenderId: "440759850329",
+  appId: "1:440759850329:web:33a1f0116e1c32f2132848"
 };
 
 const app = initializeApp(firebaseConfig);
